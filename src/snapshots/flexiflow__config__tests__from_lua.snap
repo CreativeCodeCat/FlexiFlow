@@ -15,7 +15,7 @@ Config {
     resize_hints: false,
     lock_fullscreen: true,
     fonts: [
-        "Hack:size=10",
+        "Hack Nerd Font:size=10",
     ],
     tags: [
         "一",

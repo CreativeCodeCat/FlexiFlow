@@ -1,6 +1,5 @@
 -- FlexiFlow config, baked in as the defaults rather than left for a
 -- user config file to override at runtime.
-
 -- Constructor functions ------------------------------------------------
 function key(mod, keysym, func, arg)
     return {
@@ -660,7 +659,7 @@ flexiflow = {
     resize_hints = false,
     lock_fullscreen = true,
     fonts = {
-        "Hack:size=10",
+        "Hack Nerd Font:size=10",
     },
     tags = {
         "一",
