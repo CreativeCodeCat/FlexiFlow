@@ -14,6 +14,10 @@ options:
 	@echo "PREFIX      = ${PREFIX}"
 	@echo "SHAREPREFIX = ${SHAREPREFIX}"
 
+# marked .PHONY below so this always runs `cargo build` and lets
+# Cargo's own dependency tracking (which also covers include_str!'d
+# files like bar.lua) decide what's actually stale, instead of Make
+# only rebuilding when these filenames don't exist yet
 ${BIN} ${BAR} &:
 	cargo build --release
 
@@ -32,4 +36,4 @@ uninstall:
 		${DESTDIR}${PREFIX}/bin/flexiflow_bar\
 		${DESTDIR}${SHAREPREFIX}/xsessions/FlexiFlow.desktop
 
-.PHONY: all options clean install uninstall
+.PHONY: all options clean install uninstall ${BIN} ${BAR}
