@@ -150,6 +150,10 @@ pub struct Rule {
     pub isterminal: bool,
     pub noswallow: bool,
     pub monitor: c_int,
+    /// Switch to the matched client's tag on manage, instead of only
+    /// assigning it (vanilla dwm/rwm never switches view here).
+    #[serde(default)]
+    pub focus: bool,
 }
 
 pub struct Systray {

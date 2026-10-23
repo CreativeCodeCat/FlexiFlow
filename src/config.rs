@@ -107,6 +107,10 @@ pub struct Config {
     pub layouts: Vec<Layout>,
 
     pub scratchpadname: String,
+
+    /// Commands (argv lists) to spawn once on startup.
+    #[serde(default)]
+    pub autostart: Vec<Vec<String>>,
 }
 
 unsafe impl Send for Config {}

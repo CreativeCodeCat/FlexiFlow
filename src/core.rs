@@ -2773,6 +2773,7 @@ pub fn applyrules(state: &mut State, c: *mut Client) {
         // rule matching
         (*c).isfloating = false;
         (*c).tags = 0;
+        let mut focus_tag = false;
         xlib::XGetClassHint(state.dpy, (*c).win, &mut ch);
         let class = if !ch.res_class.is_null() {
             CStr::from_ptr(ch.res_class)
@@ -2796,6 +2797,7 @@ pub fn applyrules(state: &mut State, c: *mut Client) {
                 (*c).noswallow = r.noswallow;
                 (*c).isfloating = r.isfloating;
                 (*c).tags |= r.tags;
+                focus_tag |= r.focus;
                 let mut m = state.mons;
                 while !m.is_null() && (*m).num != r.monitor {
                     m = (*m).next;
@@ -2816,6 +2818,9 @@ pub fn applyrules(state: &mut State, c: *mut Client) {
         } else {
             (*(*c).mon).tagset[(*(*c).mon).seltags]
         };
+        if focus_tag && (*c).mon == state.selmon {
+            view(state, &Arg::Ui((*c).tags) as *const Arg);
+        }
     }
 }
 

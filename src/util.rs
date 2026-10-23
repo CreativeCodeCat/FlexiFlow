@@ -1,4 +1,19 @@
 use libc::{c_void, size_t};
+use std::process::Command;
+
+/// Spawn each argv list in `cmds` once, ignoring any that fail to start
+/// (missing binary, etc.) — mirrors dwm/flexiflow's `runAutostart`, which
+/// doesn't check either.
+pub fn run_autostart(cmds: &[Vec<String>]) {
+    for argv in cmds {
+        let Some((bin, args)) = argv.split_first() else {
+            continue;
+        };
+        if let Err(e) = Command::new(bin).args(args).spawn() {
+            log::warn!("autostart: failed to spawn {bin:?}: {e}");
+        }
+    }
+}
 
 pub fn die(msg: &str) -> ! {
     eprintln!("{msg}");
