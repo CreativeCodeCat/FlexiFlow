@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     error::Error,
     ffi::{CString, c_float, c_int, c_uint},
-    fs::read_to_string,
+    fs::{create_dir_all, read_to_string, write},
     path::{Path, PathBuf},
 };
 
@@ -182,6 +182,10 @@ fn default_barpadding() -> c_int {
 unsafe impl Send for Config {}
 unsafe impl Sync for Config {}
 
+/// The baked-in default config, also used by `load_home` to seed
+/// `~/.config/flexiflow/config.lua` on first run.
+const DEFAULT_LUA: &str = include_str!("config.lua");
+
 struct ConfigBuilder {
     lua: Lua,
     globals: Table,
@@ -211,7 +215,7 @@ impl ConfigBuilder {
             globals.set(k, v).unwrap();
         }
 
-        lua.load(include_str!("config.lua")).exec().unwrap();
+        lua.load(DEFAULT_LUA).exec().unwrap();
 
         Self { lua, globals }
     }
@@ -252,7 +256,7 @@ impl Config {
 
         let config_path = base.join("flexiflow").join("config.lua");
         if !config_path.exists() {
-            log::debug!("no user config at {config_path:?}, using defaults");
+            seed_default_config(&config_path, DEFAULT_LUA);
             return Config::default();
         }
 
@@ -260,6 +264,20 @@ impl Config {
             log::error!("failed to read config file {config_path:?}: {e:?}");
             Config::default()
         })
+    }
+}
+
+/// Copy the baked-in default to `path` so a first-time user gets an
+/// actual, editable file at the documented override location instead
+/// of silently running on an in-memory default they'd have to dig up
+/// from source to even see. Best-effort: a write failure (e.g. a
+/// read-only home) just logs and falls back to the in-memory default,
+/// same as before this existed.
+fn seed_default_config(path: &Path, source: &str) {
+    let Some(dir) = path.parent() else { return };
+    match create_dir_all(dir).and_then(|()| write(path, source)) {
+        Ok(()) => log::info!("wrote default config to {path:?}"),
+        Err(e) => log::warn!("could not write default config to {path:?}: {e:?}"),
     }
 }
 
@@ -273,5 +291,18 @@ mod tests {
     fn from_lua() {
         let got = Config::from_lua("testfiles/config.lua").unwrap();
         assert_debug_snapshot!(got)
+    }
+
+    #[test]
+    fn seed_default_config_writes_the_embedded_default_verbatim() {
+        let dir = std::env::temp_dir()
+            .join(format!("flexiflow-config-test-{}", std::process::id()));
+        let path = dir.join("config.lua");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        seed_default_config(&path, DEFAULT_LUA);
+
+        assert_eq!(read_to_string(&path).unwrap(), DEFAULT_LUA);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
