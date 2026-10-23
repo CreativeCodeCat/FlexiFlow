@@ -161,9 +161,6 @@ scratchpads = {
             "btop",
         }
     ),
-    scratchpad("Pavucontrol", {
-        "pavucontrol",
-    }),
 }
 
 -- Spawns, 1:1 with flexiflow's old keys.rs ------------------------------
@@ -384,11 +381,6 @@ keys = {
     key(
         altkey, XK_b, togglescratch, {
             I = 1,
-        }
-    ),
-    key(
-        altkey, XK_p, togglescratch, {
-            I = 2,
         }
     ),
 
