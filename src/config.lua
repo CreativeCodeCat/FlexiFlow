@@ -877,7 +877,7 @@ flexiflow = {
         {
             "cbatticon",
         },
-        -- status2d bar segments (scripts/flexiflow_bar); needs `make install`
+        -- status bar segments (src/bin/flexiflow_bar); needs `make install`
         -- to be on $PATH, same as every other entry here
         {
             "flexiflow_bar",
