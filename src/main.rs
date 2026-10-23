@@ -19,7 +19,31 @@ mod tests;
 /// env vars in its `runAutostart`.
 const WM_NAME: &str = "flexiflow-rs";
 
+/// `flexiflow-rs -s TEXT`: like flexiflow.c's own `-s` flag (and dwm's
+/// `xsetroot -name`), just stores `TEXT` as the root window's `WM_NAME`
+/// and exits - this is how the already-running instance picks up new
+/// status bar text, including the status2d color codes `core.rs`'s
+/// `drawbar` parses out of it. `flexiflow_bar` calls this once a second.
+fn set_status_text(text: &str) {
+    unsafe {
+        let dpy = x11::xlib::XOpenDisplay(std::ptr::null_mut());
+        if dpy.is_null() {
+            die("flexiflow-rs: cannot open display");
+        }
+        let root = x11::xlib::XDefaultRootWindow(dpy);
+        let c_text = std::ffi::CString::new(text).unwrap_or_default();
+        x11::xlib::XStoreName(dpy, root, c_text.as_ptr());
+        x11::xlib::XCloseDisplay(dpy);
+    }
+}
+
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() >= 2 && args[1] == "-s" {
+        set_status_text(args.get(2).map(String::as_str).unwrap_or(""));
+        return;
+    }
+
     env_logger::init();
 
     // SAFETY: called once, single-threaded, before any other threads exist.

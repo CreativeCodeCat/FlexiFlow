@@ -1,5 +1,5 @@
 use std::cmp::max;
-use std::ffi::{CStr, c_int, c_uint, c_ulong};
+use std::ffi::{CStr, CString, c_int, c_uint, c_ulong};
 use std::io::Read;
 use std::mem::{MaybeUninit, size_of};
 use std::ptr::null_mut;
@@ -1409,6 +1409,86 @@ pub fn textw(drw: &mut Drw, x: &str, lrpad: c_int) -> c_int {
     unsafe { drw::fontset_getwidth(drw, x) as c_int + lrpad }
 }
 
+/// Split `text` on dwm's statuscolors/"status2d" inline color codes -
+/// `^c#RRGGBB^` sets the foreground, `^b#RRGGBB^` the background, `^d^`
+/// resets both to `norm_fg`/`norm_bg` - into `(text, fg, bg)` runs.
+/// Unrecognized codes are dropped silently, matching
+/// `FlexiFlow/flexiflow.c`'s `drawstatusbar`, whose format
+/// `flexiflow_bar` (and this fork's `-s` flag) still produce.
+fn parse_status_segments(
+    text: &str,
+    norm_fg: &str,
+    norm_bg: &str,
+) -> Vec<(String, String, String)> {
+    let mut segs = vec![];
+    let (mut fg, mut bg) = (norm_fg.to_string(), norm_bg.to_string());
+    let mut buf = String::new();
+    let mut chars = text.chars();
+    while let Some(c) = chars.next() {
+        if c != '^' {
+            buf.push(c);
+            continue;
+        }
+        let code: String = chars.by_ref().take_while(|&c| c != '^').collect();
+        if !buf.is_empty() {
+            segs.push((std::mem::take(&mut buf), fg.clone(), bg.clone()));
+        }
+        if let Some(hex) = code.strip_prefix('c') {
+            fg = hex.to_string();
+        } else if let Some(hex) = code.strip_prefix('b') {
+            bg = hex.to_string();
+        } else if code == "d" {
+            fg = norm_fg.to_string();
+            bg = norm_bg.to_string();
+        }
+    }
+    if !buf.is_empty() {
+        segs.push((buf, fg, bg));
+    }
+    segs
+}
+
+/// Render `state.stext`'s status2d segments right-aligned against
+/// `x_end`, each in its own fg/bg color, returning the total pixel width
+/// drawn (status text + the same left/right padding the old single-scheme
+/// render used, so callers can position things relative to it exactly as
+/// before).
+fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
+    let norm = &state.config.colors.0[Scheme::Norm as usize];
+    let norm_fg = norm[Col::Fg as usize].to_string_lossy().into_owned();
+    let norm_bg = norm[Col::Bg as usize].to_string_lossy().into_owned();
+    let segs = parse_status_segments(&state.stext, &norm_fg, &norm_bg);
+
+    let raw_widths: Vec<c_int> = segs
+        .iter()
+        .map(|(text, ..)| textw(&mut state.drw, text, 0))
+        .collect();
+    let total_raw: c_int = raw_widths.iter().sum();
+    let tw = total_raw + state.lrpad / 2 + 2;
+
+    let mut x = x_end - tw;
+    for (i, (text, fg, bg)) in segs.iter().enumerate() {
+        let (Ok(fgc), Ok(bgc)) = (CString::new(fg.as_str()), CString::new(bg.as_str())) else {
+            x += raw_widths[i];
+            continue;
+        };
+        let scm = drw::scm_create(&state.drw, &[fgc, bgc], 2);
+        if scm.len() < 2 {
+            x += raw_widths[i];
+            continue;
+        }
+        drw::setscheme(&mut state.drw, scm);
+        let lpad = if i == 0 { (state.lrpad / 2 - 2).max(0) as u32 } else { 0 };
+        let w = raw_widths[i] as u32 + lpad;
+        unsafe {
+            drw::text(&mut state.drw, x, 0, w, h, lpad, text, 0);
+        }
+        x += raw_widths[i] + lpad as c_int;
+    }
+
+    tw
+}
+
 pub fn drawbar(state: &mut State, m: *mut Monitor) {
     log::trace!("drawbar");
     unsafe {
@@ -1431,20 +1511,12 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
 
         // draw status first so it can be overdrawn by tags later
         if m == state.selmon {
-            // status is only drawn on selected monitor
-            drw::setscheme(&mut state.drw, state.scheme[Scheme::Norm].clone());
-            tw = textw(&mut state.drw, &state.stext, state.lrpad / 2) + 2; // 2px right padding
+            // status is only drawn on selected monitor; status2d inline
+            // color codes (^c#hex^/^b#hex^/^d^) come from flexiflow_bar
+            // via this fork's `-s` flag, same as flexiflow.c's own
+            // drawstatusbar
             log::trace!("drawbar: text");
-            drw::text(
-                &mut state.drw,
-                (*m).ww - tw - stw as i32,
-                0,
-                tw as u32,
-                state.bh as u32,
-                (state.lrpad / 2 - 2) as u32,
-                &state.stext,
-                0,
-            );
+            tw = draw_status2d(state, (*m).ww - stw as i32, state.bh as u32);
         }
 
         resizebarwin(state, m);
@@ -2536,9 +2608,30 @@ pub fn manage(state: &mut State, w: Window, wa: *mut xlib::XWindowAttributes) {
         // TODO I'm also pretty sure this is _not_ the right way to be handling
         // this. checking the name of the window and applying these rules seems
         // like something meant to be handled by RULES
-        (*state.selmon).tagset[(*state.selmon).seltags] &= !state.scratchtag();
-        if (*c).name == state.config.scratchpadname {
-            (*c).tags = state.scratchtag();
+        (*state.selmon).tagset[(*state.selmon).seltags] &= !state.scratch_mask();
+        let mut sch = xlib::XClassHint {
+            res_name: std::ptr::null_mut(),
+            res_class: std::ptr::null_mut(),
+        };
+        xlib::XGetClassHint(state.dpy, (*c).win, &mut sch);
+        let scratch_class = if !sch.res_class.is_null() {
+            CStr::from_ptr(sch.res_class).to_string_lossy().into_owned()
+        } else {
+            String::new()
+        };
+        if !sch.res_class.is_null() {
+            xlib::XFree(sch.res_class.cast());
+        }
+        if !sch.res_name.is_null() {
+            xlib::XFree(sch.res_name.cast());
+        }
+        let scratch_slot = state
+            .config
+            .scratchpads
+            .iter()
+            .position(|s| s.class == scratch_class);
+        if let Some(i) = scratch_slot {
+            (*c).tags = state.scratchtag(i);
             (*(*c).mon).tagset[(*(*c).mon).seltags] |= (*c).tags;
             (*c).isfloating = true;
             (*c).x = (*(*c).mon).wx + (*(*c).mon).ww / 2 - width(c) / 2;
@@ -2935,5 +3028,55 @@ pub fn getstate(state: &mut State, w: Window) -> c_long {
         }
         XFree(p.cast());
         result
+    }
+}
+
+#[cfg(test)]
+mod status2d_tests {
+    use super::parse_status_segments;
+
+    #[test]
+    fn splits_on_color_codes_and_keeps_the_color_set_before_each_run() {
+        // a real `seg_updates()` segment from flexiflow_bar: icon on one
+        // background, text on a brighter one
+        let text = "^c#283036^^b#A165E8^ ^c#283036^^b#C9A4FF^ Fully Updated";
+        let segs = parse_status_segments(text, "#000000", "#ffffff");
+        assert_eq!(
+            segs,
+            vec![
+                (" ".to_string(), "#283036".to_string(), "#A165E8".to_string()),
+                (
+                    " Fully Updated".to_string(),
+                    "#283036".to_string(),
+                    "#C9A4FF".to_string()
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn d_resets_to_the_normal_colors() {
+        let text = "^c#111111^^b#222222^hi^d^bye";
+        let segs = parse_status_segments(text, "#000000", "#ffffff");
+        assert_eq!(
+            segs,
+            vec![
+                ("hi".to_string(), "#111111".to_string(), "#222222".to_string()),
+                ("bye".to_string(), "#000000".to_string(), "#ffffff".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn plain_text_with_no_codes_uses_the_normal_colors() {
+        let segs = parse_status_segments("just text", "#000000", "#ffffff");
+        assert_eq!(
+            segs,
+            vec![(
+                "just text".to_string(),
+                "#000000".to_string(),
+                "#ffffff".to_string()
+            )]
+        );
     }
 }

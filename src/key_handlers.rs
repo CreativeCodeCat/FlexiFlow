@@ -839,7 +839,7 @@ pub(crate) fn spawn(state: &mut State, arg: *const Arg) {
             argv.push((*state.selmon).num.to_string());
         }
 
-        (*state.selmon).tagset[(*state.selmon).seltags] &= !state.scratchtag();
+        (*state.selmon).tagset[(*state.selmon).seltags] &= !state.scratch_mask();
 
         let mut cmd = Command::new(argv[0].clone());
         let cmd = if argv.len() > 1 { cmd.args(&argv[1..]) } else { &mut cmd };
@@ -892,22 +892,36 @@ pub(crate) fn fullscreen(state: &mut State, _: *const Arg) {
     }
 }
 
+/// Toggle the scratchpad slot `arg.i` (an index into `config.scratchpads`):
+/// show/hide it if a client is already tagged for this slot, otherwise
+/// spawn that slot's configured command. Generalizes upstream's single
+/// global scratch tag to however many slots are configured (flexiflow
+/// wants three, each toggled independently by its own key).
 pub(crate) fn togglescratch(state: &mut State, arg: *const Arg) {
     unsafe {
+        if arg.is_null() {
+            return;
+        }
+        let i = (*arg).i() as usize;
+        let Some(spec) = state.config.scratchpads.get(i) else {
+            log::warn!("togglescratch: no scratchpad configured at index {i}");
+            return;
+        };
+        let tag = state.scratchtag(i);
+
         let mut c: *mut Client;
         let mut found = false;
         cfor!((
         c = (*state.selmon).clients;
         !c.is_null();
         c = (*c).next) {
-            found = ((*c).tags & state.scratchtag()) != 0;
+            found = ((*c).tags & tag) != 0;
             if found {
                 break;
             }
         });
         if found {
-            let newtagset = (*state.selmon).tagset[(*state.selmon).seltags]
-                ^ state.scratchtag();
+            let newtagset = (*state.selmon).tagset[(*state.selmon).seltags] ^ tag;
             if newtagset != 0 {
                 (*state.selmon).tagset[(*state.selmon).seltags] = newtagset;
                 focus(state, null_mut());
@@ -918,7 +932,8 @@ pub(crate) fn togglescratch(state: &mut State, arg: *const Arg) {
                 restack(state, state.selmon);
             }
         } else {
-            spawn(state, arg);
+            let cmd = spec.cmd.clone();
+            spawn(state, &Arg::V(cmd) as *const Arg);
         }
     }
 }

@@ -2,8 +2,8 @@
 -- dwm's config.def.h / flexiflow's config.def.h) rather than left for
 -- $XDG_CONFIG_HOME/rwm/config.lua to supply at runtime.
 --
--- Status: Phase 3 of the penrose -> rwm migration. The multi-scratchpad
--- bindings + status2d bar (Phase 4) are not wired up yet; see the plan.
+-- Status: all 5 phases of the penrose -> rwm migration plan are wired up
+-- here (see the plan / git history for the rest).
 
 -- Constructor functions ------------------------------------------------
 
@@ -43,6 +43,15 @@ function rule (class, instance, title, tags, isfloating, isterminal, noswallow, 
    }
 end
 
+-- One scratchpad slot: `class` is matched against a client's WM_CLASS to
+-- recognize it, `cmd` is spawned if it isn't running yet. Each slot gets
+-- its own reserved tag bit, so `togglescratch`'s `arg.i` (the slot's
+-- index into this list) toggles it independently of the others - unlike
+-- upstream rwm's single global scratchpad.
+function scratchpad (class, cmd)
+   return {class = class, cmd = cmd}
+end
+
 -- For each tag key (N = 1, ..., 9, 0) this inserts:
 --
 -- * MOD+N           to view the tag
@@ -71,6 +80,20 @@ s_mod = ShiftMask | modkey
 
 termcmd = {"alacritty"}
 menucmd = {"menu"}
+
+-- The three scratchpads from the old main.rs's `NamedScratchPad`s. Each
+-- command sets both --title and --class to the same marker string so the
+-- title-based match above is unambiguous.
+scratchpads = {
+   scratchpad("scratchpad_terminal", {
+	  "alacritty", "--title=scratchpad_terminal",
+	  "--class=scratchpad_terminal,scratchpad_terminal",
+   }),
+   scratchpad("scratchpad_btop", {
+	  "alacritty", "--class=scratchpad_btop,scratchpad_btop", "-e", "btop",
+   }),
+   scratchpad("Pavucontrol", {"pavucontrol"}),
+}
 
 -- Spawns, 1:1 with flexiflow's old keys.rs ------------------------------
 
@@ -123,6 +146,12 @@ keys = {
    key(modkey, XK_period, focusmon, {I = 1}),
    key(s_mod, XK_comma, tagmon, {I = -1}),
    key(s_mod, XK_period, tagmon, {I = 1}),
+
+   -- scratchpads (indices into the `scratchpads` list below), on Alt
+   -- rather than modkey to match the old `{A, -1, ...}` dwm binds
+   key(altkey, XK_Return, togglescratch, {I = 0}),
+   key(altkey, XK_b, togglescratch, {I = 1}),
+   key(altkey, XK_p, togglescratch, {I = 2}),
 
    -- spawns
    key(modkey, XK_Return, spawn, {V = termcmd}),
@@ -252,7 +281,7 @@ rwm = {
 	  {symbol = "|M|", arrange = centered_master},
 	  {symbol = ">M>", arrange = centered_floating_master},
    },
-   scratchpadname = "scratchpad",
+   scratchpads = scratchpads,
 
    -- Subset of flexiflow's old `autostart[]` worth spawning unconditionally;
    -- anything here that isn't installed just fails silently (same as dwm's
@@ -266,5 +295,8 @@ rwm = {
 	  {"blueman-applet"},
 	  {"pasystray"},
 	  {"cbatticon"},
+	  -- status2d bar segments (scripts/flexiflow_bar); needs `make install`
+	  -- to be on $PATH, same as every other entry here
+	  {"flexiflow_bar"},
    },
 }

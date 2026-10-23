@@ -86,8 +86,20 @@ impl State {
         (1 << self.config.tags.len()) - 1
     }
 
-    pub fn scratchtag(&self) -> u32 {
-        1 << self.config.tags.len()
+    /// The reserved tag bit for the `i`th entry in `config.scratchpads`,
+    /// one bit above the regular tags per slot (flexiflow's three
+    /// scratchpads get bits `tags.len()`, `tags.len() + 1`,
+    /// `tags.len() + 2`, generalizing rwm's original single scratch bit).
+    pub fn scratchtag(&self, i: usize) -> u32 {
+        1 << (self.config.tags.len() + i)
+    }
+
+    /// All scratchpad tag bits combined, for clearing every scratchpad's
+    /// visibility at once (e.g. before spawning an unrelated program).
+    pub fn scratch_mask(&self) -> u32 {
+        (0..self.config.scratchpads.len())
+            .map(|i| self.scratchtag(i))
+            .fold(0, |acc, bit| acc | bit)
     }
 }
 

@@ -160,6 +160,20 @@ pub struct Rule {
     pub focus: bool,
 }
 
+/// One slot of rwm's scratchpad mechanism, generalized from upstream's
+/// single global `scratchpadname`/`scratchpadcmd` (which matched a
+/// client's *title*) to however many are configured (flexiflow wants
+/// three: terminal, btop, pavucontrol). `class` is matched against a
+/// client's `WM_CLASS` instead - unlike a `--title` flag, not every
+/// scratchpad program lets you set its title (pavucontrol doesn't), but
+/// `WM_CLASS` is reliable for all of them. `cmd` is spawned when
+/// `togglescratch` finds no client tagged with this slot yet.
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct ScratchSpec {
+    pub class: String,
+    pub cmd: Vec<String>,
+}
+
 pub struct Systray {
     pub win: Window,
     pub icons: *mut Client,

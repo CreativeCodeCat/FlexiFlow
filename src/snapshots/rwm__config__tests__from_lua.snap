@@ -434,6 +434,36 @@ Config {
             ),
         },
         Key {
+            mod_: 8,
+            keysym: 65293,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+        },
+        Key {
+            mod_: 8,
+            keysym: 98,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 8,
+            keysym: 112,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                2,
+            ),
+        },
+        Key {
             mod_: 64,
             keysym: 65293,
             func: Some(
@@ -1761,7 +1791,31 @@ Config {
             ),
         },
     ],
-    scratchpadname: "scratchpad",
+    scratchpads: [
+        ScratchSpec {
+            class: "scratchpad_terminal",
+            cmd: [
+                "alacritty",
+                "--title=scratchpad_terminal",
+                "--class=scratchpad_terminal,scratchpad_terminal",
+            ],
+        },
+        ScratchSpec {
+            class: "scratchpad_btop",
+            cmd: [
+                "alacritty",
+                "--class=scratchpad_btop,scratchpad_btop",
+                "-e",
+                "btop",
+            ],
+        },
+        ScratchSpec {
+            class: "Pavucontrol",
+            cmd: [
+                "pavucontrol",
+            ],
+        },
+    ],
     autostart: [
         [
             "setxkbmap",
@@ -1789,6 +1843,9 @@ Config {
         ],
         [
             "cbatticon",
+        ],
+        [
+            "flexiflow_bar",
         ],
     ],
 }

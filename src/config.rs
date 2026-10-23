@@ -9,7 +9,9 @@ use std::{
 use env::{CLICKS, HANDLERS, KEYS, XKEYS};
 use mlua::{Lua, LuaSerdeExt as _, Table};
 
-use crate::{Button, Layout, Rule, config::key::Key, enums::Scheme};
+use crate::{
+    Button, Layout, Rule, ScratchSpec, config::key::Key, enums::Scheme,
+};
 
 mod env;
 pub mod key;
@@ -116,7 +118,10 @@ pub struct Config {
 
     pub layouts: Vec<Layout>,
 
-    pub scratchpadname: String,
+    /// Scratchpad slots, generalized from upstream's single
+    /// `scratchpadname`/`scratchpadcmd` - see `ScratchSpec`.
+    #[serde(default)]
+    pub scratchpads: Vec<ScratchSpec>,
 
     /// Commands (argv lists) to spawn once on startup.
     #[serde(default)]
