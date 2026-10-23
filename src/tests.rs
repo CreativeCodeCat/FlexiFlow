@@ -1,4 +1,4 @@
-use rwm::{events::Event, handlers, textw};
+use flexiflow::{events::Event, handlers, textw};
 use x11::xlib::{Button1, XOpenDisplay};
 
 use super::*;
@@ -26,7 +26,7 @@ fn main() {
             let xcon = match Connection::connect(Some(":1.0")) {
                 Ok((xcon, _)) => xcon,
                 Err(e) => {
-                    eprintln!("rwm: cannot get xcb connection: {e:?}");
+                    eprintln!("FlexiFlow: cannot get xcb connection: {e:?}");
                     break 'defer false;
                 }
             };

@@ -1,13 +1,13 @@
 //! FlexiFlow: a tiling window manager based on dwm.
 
-use rwm::{cleanup, run, scan, setup};
+use flexiflow::{cleanup, run, scan, setup};
 #[cfg(target_os = "linux")]
 use xcb::Connection;
 
-use rwm::checkotherwm;
-use rwm::util::{die, run_autostart};
+use flexiflow::checkotherwm;
+use flexiflow::util::{die, run_autostart};
 
-pub use rwm::enums;
+pub use flexiflow::enums;
 
 #[cfg(test)]
 mod tests;

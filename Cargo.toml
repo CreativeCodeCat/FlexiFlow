@@ -6,7 +6,7 @@ rust-version = "1.92"
 description = "A tiling window manager based on dwm"
 
 [lib]
-name = "rwm"
+name = "flexiflow"
 path = "src/lib.rs"
 
 [dependencies]
