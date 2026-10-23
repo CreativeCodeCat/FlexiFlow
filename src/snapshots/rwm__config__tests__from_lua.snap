@@ -928,6 +928,16 @@ Config {
             ),
         },
         Key {
+            mod_: 69,
+            keysym: 114,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+        },
+        Key {
             mod_: 64,
             keysym: 49,
             func: Some(

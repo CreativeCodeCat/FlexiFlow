@@ -639,6 +639,14 @@ keys = {
             I = 0,
         }
     ),
+    -- re-exec the running binary in place: picks up a `cargo build`
+    -- rebuild and/or a reloaded config.lua without logging out (open
+    -- windows survive - see key_handlers.rs::restart)
+    key(
+        s_mod | ControlMask, XK_r, restart, {
+            I = 0,
+        }
+    ),
 }
 tagkeys(keys)
 

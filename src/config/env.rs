@@ -35,8 +35,8 @@ macro_rules! clicks {
     }
 }
 
-pub(super) static HANDLERS: [(&str, &str); 45] = handler_fns! {
-    focusmon, focusstack, pushstack, incnmaster, killclient, quit, setlayout, setmfact,
+pub(super) static HANDLERS: [(&str, &str); 46] = handler_fns! {
+    focusmon, focusstack, pushstack, incnmaster, killclient, quit, restart, setlayout, setmfact,
     spawn, tag, tagmon, togglebar, togglefloating, toggletag, toggleview,
     view, zoom, movemouse, resizemouse, fullscreen,
     togglescratch,

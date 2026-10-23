@@ -268,6 +268,7 @@ pub fn setup(dpy: *mut Display) -> State {
             ),
             numlockmask: 0,
             running: true,
+            restart: false,
             systray: None,
             config,
 

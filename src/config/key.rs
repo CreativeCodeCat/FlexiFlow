@@ -65,6 +65,7 @@ pub(crate) static FUNC_MAP: LazyLock<FnMap> = LazyLock::new(|| {
         ("incnmaster", incnmaster as FN),
         ("killclient", killclient as FN),
         ("quit", quit as FN),
+        ("restart", restart as FN),
         ("setlayout", setlayout as FN),
         ("setmfact", setmfact as FN),
         ("spawn", spawn as FN),

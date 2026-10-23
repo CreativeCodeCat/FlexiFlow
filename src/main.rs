@@ -72,5 +72,30 @@ fn main() {
 
     scan(&mut state);
     run(&mut state);
+
+    let restart = state.restart;
     cleanup(state);
+
+    if restart {
+        restart_self();
+    }
+}
+
+/// Re-executes the running binary in place (`execvp`), used by the
+/// `restart` key handler. This replaces the process image, so it picks
+/// up both a rebuild on disk (if the binary at this path changed since
+/// launch) and a reloaded config.lua (loaded fresh in `setup()` on every
+/// startup) - no partial/live config reload needed. Managed windows are
+/// unaffected: by the time this runs, `cleanup` has already reparented
+/// them back to root without closing them, and the new process's `scan`
+/// re-adopts them, just like on a normal startup.
+fn restart_self() -> ! {
+    use std::os::unix::process::CommandExt as _;
+
+    let exe = std::env::current_exe()
+        .unwrap_or_else(|_| std::env::args().next().unwrap_or_default().into());
+    let err = std::process::Command::new(exe)
+        .args(std::env::args_os().skip(1))
+        .exec();
+    die(&format!("flexiflow-rs: failed to restart: {err}"));
 }

@@ -600,6 +600,16 @@ pub(crate) fn quit(state: &mut State, _arg: *const Arg) {
     state.running = false;
 }
 
+/// Like `quit`, but tells `main` to re-exec the running binary afterwards
+/// instead of exiting - picks up both a rebuilt binary on disk and a
+/// reloaded config.lua, since both are read fresh on the next startup.
+/// Managed windows survive: `cleanup`'s `unmanage` only reparents them
+/// back to root, it doesn't close them.
+pub(crate) fn restart(state: &mut State, _arg: *const Arg) {
+    state.restart = true;
+    state.running = false;
+}
+
 // these are shared between movemouse and resizemouse
 const CONFIGURE_REQUEST: i32 = ConfigureRequest;
 const EXPOSE: i32 = Expose;

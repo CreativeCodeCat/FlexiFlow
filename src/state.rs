@@ -69,6 +69,10 @@ pub struct State {
     /// Supporting window for NetWMCheck
     pub wmcheckwin: Window,
     pub running: bool,
+    /// Set by the `restart` key handler to tell `main` to re-exec the
+    /// running binary (picking up both a rebuild on disk and a reloaded
+    /// config.lua) once the event loop exits, instead of just quitting.
+    pub restart: bool,
     pub numlockmask: c_uint,
     pub config: Config,
 
