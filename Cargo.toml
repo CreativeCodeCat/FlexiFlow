@@ -1,0 +1,14 @@
+[package]
+name = "flexiflow-rs"
+version = "0.1.0"
+edition = "2024"
+description = "Penrose-based port of the flexiflow (dwm fork) window manager config"
+
+[dependencies]
+penrose = { git = "https://github.com/sminez/penrose.git", rev = "5ab890bc98a06c450bfec40c405829c3cf68982c", features = ["x11rb", "keysyms"] }
+penrose_ui = { git = "https://github.com/sminez/penrose.git", rev = "5ab890bc98a06c450bfec40c405829c3cf68982c" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
+
+[profile.release]
+opt-level = 2
