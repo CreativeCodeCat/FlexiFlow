@@ -223,7 +223,7 @@ impl ConfigBuilder {
     }
 
     fn finish(self) -> Result<Config, Box<dyn Error>> {
-        Ok(self.lua.from_value(self.globals.get("rwm")?)?)
+        Ok(self.lua.from_value(self.globals.get("flexiflow")?)?)
     }
 }
 
@@ -250,7 +250,7 @@ impl Config {
             return Config::default();
         };
 
-        let config_path = base.join("rwm").join("config.lua");
+        let config_path = base.join("flexiflow").join("config.lua");
 
         Config::from_lua(config_path).unwrap_or_else(|e| {
             log::error!("failed to read config file: {e:?}");

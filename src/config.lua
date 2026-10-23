@@ -645,7 +645,7 @@ keys = {
 }
 tagkeys(keys)
 
-rwm = {
+flexiflow = {
     borderpx = 2,
     snap = 32,
     showbar = true,
