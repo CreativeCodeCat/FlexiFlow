@@ -11,6 +11,7 @@ Config {
     nmaster: 1,
     gaps: 10,
     smartgaps: false,
+    barpadding: 10,
     resize_hints: false,
     lock_fullscreen: true,
     fonts: [
@@ -505,16 +506,6 @@ Config {
             ),
             arg: I(
                 1,
-            ),
-        },
-        Key {
-            mod_: 8,
-            keysym: 112,
-            func: Some(
-                "[func]",
-            ),
-            arg: I(
-                2,
             ),
         },
         Key {
@@ -1861,12 +1852,6 @@ Config {
                 "--class=scratchpad_btop,scratchpad_btop",
                 "-e",
                 "btop",
-            ],
-        },
-        ScratchSpec {
-            class: "Pavucontrol",
-            cmd: [
-                "pavucontrol",
             ],
         },
     ],

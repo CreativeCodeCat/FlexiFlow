@@ -112,6 +112,12 @@ pub struct Config {
     #[serde(default)]
     pub smartgaps: bool,
 
+    /// Extra vertical padding added to the bar's height, on top of the
+    /// font's own height - gives the tags/status text room to breathe
+    /// instead of sitting flush against the bar's top/bottom edge.
+    #[serde(default = "default_barpadding")]
+    pub barpadding: c_int,
+
     /// Respect size hints in tiled resizals
     pub resize_hints: bool,
 
@@ -167,6 +173,10 @@ pub struct Config {
 
 fn default_gaps() -> c_int {
     10
+}
+
+fn default_barpadding() -> c_int {
+    2
 }
 
 unsafe impl Send for Config {}

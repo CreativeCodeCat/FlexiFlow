@@ -246,7 +246,7 @@ pub fn setup(dpy: *mut Display) -> State {
             move_: drw::cur_create(&drw, XC_FLEUR as i32),
         };
         let mut state = State {
-            bh: drw.fonts[0].h as i32 + 2,
+            bh: drw.fonts[0].h as i32 + config.barpadding,
             sw,
             sh,
             cursors,

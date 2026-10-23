@@ -651,6 +651,9 @@ rwm = {
     nmaster = 1,
     gaps = 10,
     smartgaps = false,
+    -- extra vertical room in the bar beyond the font's own height, so
+    -- tags/status text aren't flush against the bar's top/bottom edge
+    barpadding = 10,
     resize_hints = false,
     lock_fullscreen = true,
     fonts = {
