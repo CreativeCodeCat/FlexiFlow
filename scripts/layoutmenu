@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-cat <<EOF | xmenu
+# Each line is "item<TAB>command" - xmenu's own format for showing one
+# thing but echoing another when it's picked. The number after the tab
+# is the index key_handlers.rs's layoutmenu() reads back and passes to
+# setlayout(); it must match src/config.lua's `layouts` table position
+# for position, symbol for symbol - keep the two in sync by hand if you
+# reorder, add, or remove a layout there.
+cat <<'EOF' | xmenu
 []= Tiled Layout	0
 [M] Monocle Layout	1
 [@] Spiral Layout	2
