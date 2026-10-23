@@ -33,7 +33,8 @@ static const int horizpadtabo                   = 20;
 static const int colorfultag                    = 1;        /* 0 means use SchemeSel for selected non vacant tag */
 
 static const char *fonts[] = {
-    "Hack Nerd Font:size=10",
+    "Hack:size=10",
+    "MesloLGS Nerd Font Mono:size=13",
 };
 
 // theme

@@ -3539,11 +3539,7 @@ void setclienttagprop(Client *c)
 void switchtag(void)
 {
   int i;
-  unsigned int occ = 0;
-  Client *c;
 
-  for (c = selmon->clients; c; c = c->next)
-    occ |= c->tags;
   for (i = 0; i < LENGTH(tags); i++)
   {
     if (selmon->tagset[selmon->seltags] & 1 << i)
