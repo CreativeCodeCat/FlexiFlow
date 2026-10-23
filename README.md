@@ -69,7 +69,7 @@ exec FlexiFlow
 
 Defaults are compiled into the binary from `src/config.lua`. To
 customize without rebuilding, write your own Lua config to
-`$XDG_CONFIG_HOME/rwm/config.lua` (or `~/.config/rwm/config.lua` if
+`$XDG_CONFIG_HOME/flexiflow/config.lua` (or `~/.config/flexiflow/config.lua` if
 `XDG_CONFIG_HOME` isn't set) - it's loaded fresh on every startup (and
 on every restart, see below).
 
