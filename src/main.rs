@@ -15,15 +15,14 @@ mod tests;
 /// The name reported for `_NET_WM_NAME` on the EWMH check window (see
 /// `core.rs`'s `setup`) — this is what tools like fastfetch (and
 /// `xprop -root _NET_SUPPORTING_WM_CHECK`) read as the running window
-/// manager's name, and what flexiflow.c itself set via these same three
-/// env vars in its `runAutostart`.
+/// manager's name.
 const WM_NAME: &str = "flexiflow-rs";
 
-/// `flexiflow-rs -s TEXT`: like flexiflow.c's own `-s` flag (and dwm's
-/// `xsetroot -name`), just stores `TEXT` as the root window's `WM_NAME`
-/// and exits - this is how the already-running instance picks up new
-/// status bar text, including the status2d color codes `core.rs`'s
-/// `drawbar` parses out of it. `flexiflow_bar` calls this once a second.
+/// `flexiflow-rs -s TEXT`: like dwm's `xsetroot -name`, just stores
+/// `TEXT` as the root window's `WM_NAME` and exits - this is how the
+/// already-running instance picks up new status bar text, including the
+/// inline color codes `core.rs`'s `drawbar` parses out of it.
+/// `flexiflow_bar` calls this once a second.
 fn set_status_text(text: &str) {
     unsafe {
         let dpy = x11::xlib::XOpenDisplay(std::ptr::null_mut());

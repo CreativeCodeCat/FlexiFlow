@@ -12,12 +12,11 @@
 # Segments whose optional dependency isn't installed (yay, a battery, pactl)
 # just omit themselves instead of erroring.
 #
-# Vendored into flexiflow-rs (../FlexiFlow/flexiflow_bar is the original,
-# untouched, for the C flexiflow build) with one change below: it now
-# talks to `flexiflow-rs -s`, which parses the same ^c^/^b^ codes in
-# core.rs's drawbar instead of flexiflow.c's drawstatusbar.
+# Vendored into flexiflow-rs with one change below: it now talks to
+# `flexiflow-rs -s`, which parses the same ^c^/^b^ codes in core.rs's
+# drawbar.
 
-# ---- theme (matches themes/minimal-mistakes.h accents) --------------------
+# ---- theme (matches the minimal-mistakes accents) --------------------
 Foreground="#283036"
 
 Purple="#A165E8";  Purple_Bright="#C9A4FF"

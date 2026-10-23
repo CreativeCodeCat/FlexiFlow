@@ -217,8 +217,8 @@ pub struct Layout {
     pub arrange: Option<LayoutFn>,
 }
 
-/// Per-tag/per-monitor gap configuration, ported from flexiflow's
-/// vanitygaps.c-derived `Gaps`.
+/// Per-tag/per-monitor gap configuration, matching flexiflow's vanitygaps
+/// behavior.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Gaps {
@@ -236,7 +236,7 @@ pub struct Gaps {
 }
 
 impl Gaps {
-    /// Effective gaps for `n` clients, mirroring `getgaps` in vanitygaps.c.
+    /// Effective gaps for `n` clients.
     pub fn effective(&self, n: usize) -> (c_int, c_int, c_int, c_int) {
         let outer_enabled = !(self.smartgaps && n == 1) && self.enabled;
         let inner_enabled = self.enabled;
@@ -325,9 +325,9 @@ pub struct Client {
     pub hintsvalid: bool,
     pub bw: c_int,
     pub oldbw: c_int,
-    /// Proportion of the master/stack column this client takes up relative
-    /// to its siblings there, from flexiflow's vanitygaps.c-derived cfacts
-    /// sub-patch. Follows the *client*, not the tag — unlike `Gaps`.
+    /// Proportion of the master/stack column this client takes up
+    /// relative to its siblings there. Follows the *client*, not the
+    /// tag — unlike `Gaps`.
     pub cfact: f32,
     pub tags: c_uint,
     pub isfixed: bool,

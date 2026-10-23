@@ -1,6 +1,5 @@
--- flexiflow-rs config, baked in as this fork's defaults (the same spirit as
--- dwm's config.def.h / flexiflow's config.def.h) rather than left for a
--- user config file to override at runtime.
+-- flexiflow-rs config, baked in as this fork's defaults rather than left
+-- for a user config file to override at runtime.
 
 -- Constructor functions ------------------------------------------------
 function key(mod, keysym, func, arg)

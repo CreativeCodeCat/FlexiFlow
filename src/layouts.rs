@@ -1,8 +1,8 @@
-//! Direct ports of the layout algorithms in flexiflow's `vanitygaps.c` (dwm's
-//! vanitygaps patch). Each pure `fn(..) -> Vec<R>` below is that same math;
-//! `tiled_clients`/`place` walk the real client linked list, collect each
-//! client's `cfact`, and resize each client in turn, subtracting `2 * bw`
-//! the way vanilla dwm's `resize()` expects it pre-subtracted.
+//! flexiflow's vanitygaps-derived layout algorithms. Each pure
+//! `fn(..) -> Vec<R>` below computes placement; `tiled_clients`/`place`
+//! walk the real client linked list, collect each client's `cfact`, and
+//! resize each client in turn, subtracting `2 * bw` the way vanilla
+//! dwm's `resize()` expects it pre-subtracted.
 use std::ffi::{c_int, c_uint};
 
 use crate::{Client, Gaps, Monitor, State, cfor, is_visible, nexttiled, resize};
