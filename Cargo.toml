@@ -1,14 +1,32 @@
 [package]
 name = "flexiflow-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-description = "Penrose-based port of the flexiflow (dwm fork) window manager config"
+rust-version = "1.92"
+description = "A fork of rwm (itself a port of dwm) carrying the flexiflow window manager config"
+
+# Keep the library crate importable as `rwm::...` everywhere it already is
+# (core.rs, handlers.rs, key_handlers.rs, layouts.rs, main.rs, tests.rs) so we
+# don't have to rewrite every `use rwm::` from the upstream source.
+[lib]
+name = "rwm"
+path = "src/lib.rs"
 
 [dependencies]
-penrose = { git = "https://github.com/sminez/penrose.git", rev = "5ab890bc98a06c450bfec40c405829c3cf68982c", features = ["x11rb", "keysyms"] }
-penrose_ui = { git = "https://github.com/sminez/penrose.git", rev = "5ab890bc98a06c450bfec40c405829c3cf68982c" }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing = "0.1"
+x11 = { version = "2.21.0", features = ["xlib", "xft", "xinerama"] }
+libc = "0.2.185"
+yeslogic-fontconfig-sys = "6.0.0"
+env_logger = "0.11.6"
+log = "0.4.29"
+mlua = { version = "0.11.6", features = ["lua54", "serialize"] }
+serde = { version = "1.0.228", features = ["derive"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+xcb = { version = "1.7.0", features = ["res"] }
+
+[dev-dependencies]
+insta = "1.41.1"
 
 [profile.release]
 opt-level = 2
+lto = "thin"
