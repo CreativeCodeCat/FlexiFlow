@@ -1601,8 +1601,8 @@ Config {
                     "[func]",
                 ),
             ),
-            arg: L(
-                None,
+            arg: I(
+                1,
             ),
         },
         Button {
@@ -1614,10 +1614,8 @@ Config {
                     "[func]",
                 ),
             ),
-            arg: L(
-                Some(
-                    1,
-                ),
+            arg: I(
+                -1,
             ),
         },
         Button {

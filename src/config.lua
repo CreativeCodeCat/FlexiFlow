@@ -731,10 +731,17 @@ rwm = {
     systraypinningfailfirst = true,
     showsystray = true,
     buttons = {
-        button(ClkLtSymbol, 0, Button1, setlayout),
+        -- cycle forward/back through all of `layouts` below, matching
+        -- the M-space/M-C-comma/M-C-period keys (left/right click,
+        -- instead of setlayout's upstream "toggle last two" behavior)
         button(
-            ClkLtSymbol, 0, Button3, setlayout, {
-                L = 1,
+            ClkLtSymbol, 0, Button1, cyclelayout, {
+                I = 1,
+            }
+        ),
+        button(
+            ClkLtSymbol, 0, Button3, cyclelayout, {
+                I = -1,
             }
         ),
         button(
