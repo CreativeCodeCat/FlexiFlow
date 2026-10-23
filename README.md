@@ -24,9 +24,10 @@ Configuration lives in Lua instead of a header file you recompile.
 - **Colorized status bar**: the bar's status text understands inline
   `^c#RRGGBB^` (foreground) / `^b#RRGGBB^` (background) / `^d^`
   (reset) color codes. `FlexiFlow -s "text"` feeds new status text
-  to an already-running instance; `scripts/flexiflow_bar` is a ready
-  example script covering updates/kernel/battery/ram/cpu/keyboard/
-  network/volume/clock.
+  to an already-running instance; `flexiflow_bar` (`src/bin/
+  flexiflow_bar`) is a second binary that does this itself, with its
+  own Lua config, covering updates/kernel/battery/ram/cpu/keyboard/
+  desktop/network/volume/clock.
 - **Scratchpads**: any number of named scratchpad slots, each
   independently toggleable, matched by window class and spawned on
   first use.
@@ -51,8 +52,8 @@ Xlib/Xft/Xinerama, and fontconfig development headers.
 sudo make install
 ```
 
-Installs the `FlexiFlow` binary, the `flexiflow_bar` status script,
-and an X session desktop entry (so display managers can offer
+Installs the `FlexiFlow` binary, the `flexiflow_bar` status bar
+binary, and an X session desktop entry (so display managers can offer
 "FlexiFlow" as a session). Run `sudo make uninstall` to remove them
 again.
 
@@ -72,6 +73,26 @@ customize without rebuilding, write your own Lua config to
 `$XDG_CONFIG_HOME/flexiflow/config.lua` (or `~/.config/flexiflow/config.lua` if
 `XDG_CONFIG_HOME` isn't set) - it's loaded fresh on every startup (and
 on every restart, see below).
+
+`flexiflow_bar` has its own, separate config the same way: defaults
+compiled in from `src/bin/flexiflow_bar/bar.lua`, overridable at
+`~/.config/flexiflow/bar.lua`. It controls the update interval, the
+foreground/separator colors, the cyclic accent-color palette segments
+are colored from, and which segments to show and in what order:
+
+```lua
+return {
+    interval_ms = 500,
+    colors = {
+        fg = "#283036",
+        sep_fg = "#434C5E",
+        sep_bg = "#283036",
+        accents = { { "#A165E8", "#C9A4FF" }, ... },
+    },
+    segments = { "updates", "kernel", "battery", "ram", "cpu",
+                 "keyboard", "desktop", "network", "volume", "clock" },
+}
+```
 
 ### Key bindings
 
