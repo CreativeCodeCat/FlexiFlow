@@ -862,7 +862,7 @@ pub(crate) fn spawn(state: &mut State, arg: *const Arg) {
         });
 
         let Ok(_) = cmd.spawn() else {
-            panic!("rwm: spawn '{:?}' failed", argv[0]);
+            panic!("FlexiFlow: spawn '{:?}' failed", argv[0]);
         };
     }
 }

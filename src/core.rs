@@ -118,7 +118,7 @@ pub unsafe extern "C" fn xerror(
             return 0;
         }
         eprintln!(
-            "rwm: fatal error: request code={}, error code={}",
+            "FlexiFlow: fatal error: request code={}, error code={}",
             e.request_code, e.error_code
         );
         (XERRORXLIB.unwrap())(mdpy, ee)
@@ -1123,7 +1123,7 @@ pub fn unfocus(state: &mut State, c: *mut Client, setfocus: bool) {
 pub fn updatestatus(state: &mut State) {
     log::trace!("updatestatus");
     if gettextprop(state.dpy, state.root, XA_WM_NAME, &mut state.stext) == 0 {
-        state.stext = "rwm-1.0".to_string();
+        state.stext = "FlexiFlow".to_string();
     }
     drawbar(state, state.selmon);
     updatesystray(state);
