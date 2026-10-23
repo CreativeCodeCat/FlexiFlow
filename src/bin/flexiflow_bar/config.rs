@@ -82,7 +82,7 @@ mod tests {
             cfg.segments,
             vec![
                 "updates", "kernel", "battery", "ram", "cpu", "keyboard",
-                "network", "volume", "clock"
+                "desktop", "network", "volume", "clock"
             ]
         );
     }
