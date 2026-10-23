@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # path:       /usr/bin/flexiflow_bar
-# author:     The-Repo-Club [wayne6324@gmail.com]
-# github:     https://github.com/The-Repo-Club/flexiflow
+# author:     CreativeCodeCat [wayne6324@gmail.com]
+# github:     https://github.com/CreativeCodeCat/flexiflow
 # date:       2021-04-10 12:34:47.440579
 #
 # Self-contained status bar for flexiflow (status2d patch, ^c^/^b^ color codes).
