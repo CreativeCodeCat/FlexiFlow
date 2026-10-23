@@ -35,13 +35,13 @@ macro_rules! clicks {
     }
 }
 
-pub(super) static HANDLERS: [(&str, &str); 46] = handler_fns! {
+pub(super) static HANDLERS: [(&str, &str); 47] = handler_fns! {
     focusmon, focusstack, pushstack, incnmaster, killclient, quit, restart, setlayout, setmfact,
     spawn, tag, tagmon, togglebar, togglefloating, toggletag, toggleview,
     view, zoom, movemouse, resizemouse, fullscreen,
     togglescratch,
     // key handlers added for flexiflow's config (gaps / cfact / layout cycling)
-    cyclelayout, incrgaps, incrigaps, incrogaps, incrohgaps, incrovgaps,
+    cyclelayout, layoutmenu, incrgaps, incrigaps, incrogaps, incrohgaps, incrovgaps,
     incrihgaps, incrivgaps, defaultgaps, togglegaps, setcfact,
     // layout `arrange` function names (matched in `LayoutFn::try_from`,
     // not FUNC_MAP) - all 13 of flexiflow's vanitygaps layouts

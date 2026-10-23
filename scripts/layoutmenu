@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+cat <<EOF | xmenu
+[]= Tiled Layout	0
+[M] Monocle Layout	1
+[@] Spiral Layout	2
+[D] Dwindle Layout	3
+H[] Deck Layout	4
+TTT Stack Layout	5
+=== Stack Horz Layout	6
+HHH Grid Layout	7
+### Narrow Grid Layout	8
+--- Grid Horz Layout	9
+::: Gapless Grid Layout	10
+|M| Centered Master Layout	11
+>M> Centered Floating Layout	12
+><> NULL Layout	13
+EOF

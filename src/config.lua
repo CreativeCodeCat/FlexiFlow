@@ -729,19 +729,17 @@ flexiflow = {
     systraypinningfailfirst = true,
     showsystray = true,
     buttons = {
-        -- cycle forward/back through all of `layouts` below, matching
-        -- the M-space/M-C-comma/M-C-period keys (left/right click,
-        -- instead of setlayout's upstream "toggle last two" behavior)
+        -- left click cycles forward through all of `layouts` below,
+        -- matching the M-space key (instead of setlayout's upstream
+        -- "toggle last two" behavior); right click opens the
+        -- layoutmenu script (scripts/layoutmenu, needs `make install`
+        -- and xmenu to be on $PATH) to jump straight to any of them
         button(
             ClkLtSymbol, 0, Button1, cyclelayout, {
                 I = 1,
             }
         ),
-        button(
-            ClkLtSymbol, 0, Button3, cyclelayout, {
-                I = -1,
-            }
-        ),
+        button(ClkLtSymbol, 0, Button3, layoutmenu),
         button(
             ClkWinTitle, 0, Button2, zoom, {
                 I = 0,
@@ -842,6 +840,11 @@ flexiflow = {
         {
             symbol = ">M>",
             arrange = centered_floating_master,
+        },
+        -- index 13, matching scripts/layoutmenu's "NULL Layout" entry:
+        -- no arrange function (vanilla dwm's "><>" floating layout)
+        {
+            symbol = "><>",
         },
     },
     scratchpads = scratchpads,

@@ -404,6 +404,37 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     }
 }
 
+/// Runs the `layoutmenu` script (expected on `$PATH`, piping
+/// `symbol name<TAB>index` lines into a dmenu-alike like `xmenu`) and
+/// switches to whichever layout's index the user picked. Blocks the
+/// event loop while the menu is open, same as vanilla dwm's own
+/// popen()-based `layoutmenu()` - there's no async IPC here, so this
+/// mirrors that rather than inventing some.
+pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
+    let Ok(out) = Command::new("layoutmenu").output() else {
+        log::warn!("layoutmenu: failed to run `layoutmenu` (not on $PATH?)");
+        return;
+    };
+    if !out.status.success() {
+        return;
+    }
+    let Some(idx) = parse_layoutmenu_index(&String::from_utf8_lossy(&out.stdout)) else {
+        return;
+    };
+    if idx >= state.config.layouts.len() {
+        log::warn!("layoutmenu: index {idx} is out of range");
+        return;
+    }
+    setlayout(state, &Arg::L(Some(idx)) as *const Arg);
+}
+
+/// `scripts/layoutmenu`'s menu lines are `"<symbol> <name>\t<index>"`;
+/// a dmenu-alike like `xmenu` echoes the whole selected line back, so
+/// the index is whatever's after the last tab.
+fn parse_layoutmenu_index(output: &str) -> Option<usize> {
+    output.trim().rsplit('\t').next()?.trim().parse().ok()
+}
+
 pub(crate) fn togglefloating(state: &mut State, _arg: *const Arg) {
     log::trace!("togglefloating: {_arg:?}");
     unsafe {
@@ -943,5 +974,23 @@ pub(crate) fn togglescratch(state: &mut State, arg: *const Arg) {
             let cmd = spec.cmd.clone();
             spawn(state, &Arg::V(cmd) as *const Arg);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_layoutmenu_index_reads_the_last_tab_separated_field() {
+        assert_eq!(parse_layoutmenu_index("[]= Tiled Layout\t0"), Some(0));
+        assert_eq!(parse_layoutmenu_index("><> NULL Layout\t13\n"), Some(13));
+    }
+
+    #[test]
+    fn parse_layoutmenu_index_rejects_garbage() {
+        assert_eq!(parse_layoutmenu_index(""), None);
+        assert_eq!(parse_layoutmenu_index("no tabs here"), None);
+        assert_eq!(parse_layoutmenu_index("label\tnot a number"), None);
     }
 }
