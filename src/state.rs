@@ -58,6 +58,9 @@ pub struct State {
     pub mons: *mut Monitor,
     pub stext: String,
     pub scheme: ClrScheme,
+    /// Per-tag bar colors, indexed by tag number (see
+    /// `config::TagColors`); empty entries fall back to `scheme[Sel]`.
+    pub tagscheme: Vec<Vec<Clr>>,
     pub screen: c_int,
     pub root: Window,
     /// sum of left and right padding for text

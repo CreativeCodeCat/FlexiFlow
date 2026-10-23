@@ -260,6 +260,7 @@ pub fn setup(dpy: *mut Display) -> State {
             mons: null_mut(),
             stext: String::new(),
             scheme: Default::default(),
+            tagscheme: Vec::new(),
             screen,
             root,
             wmcheckwin: xlib::XCreateSimpleWindow(
@@ -337,6 +338,13 @@ pub fn setup(dpy: *mut Display) -> State {
             state.scheme.push(drw::scm_create(
                 &state.drw,
                 &state.config.colors.0[i],
+                3,
+            ));
+        }
+        for i in 0..state.config.tagcolors.0.len() {
+            state.tagscheme.push(drw::scm_create(
+                &state.drw,
+                &state.config.tagcolors.0[i],
                 3,
             ));
         }
@@ -1534,14 +1542,21 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         for (i, tag) in state.config.tags.iter().enumerate() {
             let text = tag.to_owned();
             let w = textw(&mut state.drw, &text, state.lrpad);
+            let selected = ((*m).tagset[(*m).seltags] & (1 << i)) != 0;
+            // each tag gets its own bar color (state.tagscheme) instead of
+            // every tag sharing one global Scheme::Sel color; tags beyond
+            // tagscheme's length (or when it's empty) just fall back to
+            // the old Sel/Norm behavior.
+            let tag_scheme = state.tagscheme.get(i).cloned();
             drw::setscheme(
                 &mut state.drw,
-                state.scheme[if ((*m).tagset[(*m).seltags] & (1 << i)) != 0 {
-                    Scheme::Sel
+                if selected {
+                    tag_scheme.clone().unwrap_or_else(|| {
+                        state.scheme[Scheme::Sel].clone()
+                    })
                 } else {
-                    Scheme::Norm
-                }]
-                .clone(),
+                    state.scheme[Scheme::Norm].clone()
+                },
             );
             log::trace!("drawbar: text 2");
             drw::text(
@@ -1556,6 +1571,14 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
             );
 
             if (occ & (1 << i)) != 0 {
+                // tint the occupied-tag indicator box with this tag's own
+                // color even when it isn't currently selected, so each
+                // workspace stays visually distinct at a glance.
+                if !selected
+                    && let Some(tc) = tag_scheme
+                {
+                    drw::setscheme(&mut state.drw, tc);
+                }
                 drw::rect(
                     &mut state.drw,
                     x + boxs as i32,

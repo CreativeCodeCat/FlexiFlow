@@ -50,6 +50,38 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
     }
 }
 
+/// Per-tag `[fg, bg, border]` color triples - lets each workspace get its
+/// own accent color in the bar instead of every tag sharing one `SchemeSel`
+/// color. Indexed by tag number; a tag past the end of this list (or when
+/// the list is empty) just falls back to the normal `Scheme::Sel` color.
+#[derive(Debug, Default, serde::Deserialize)]
+#[serde(try_from = "Vec<Vec<String>>")]
+pub struct TagColors(pub Vec<Vec<CString>>);
+
+impl TryFrom<Vec<Vec<String>>> for TagColors {
+    type Error = Box<dyn Error>;
+
+    fn try_from(value: Vec<Vec<String>>) -> Result<Self, Self::Error> {
+        let mut ret = Vec::with_capacity(value.len());
+        for (i, entry) in value.into_iter().enumerate() {
+            if entry.len() != 3 {
+                return Err(format!(
+                    "tagcolors[{i}]: expected 3 colors (fg, bg, border), got {}",
+                    entry.len()
+                )
+                .into());
+            }
+            ret.push(
+                entry
+                    .into_iter()
+                    .map(CString::new)
+                    .collect::<Result<_, _>>()?,
+            );
+        }
+        Ok(Self(ret))
+    }
+}
+
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     /// Border pixel of windows
@@ -91,6 +123,11 @@ pub struct Config {
     pub tags: Vec<String>,
 
     pub colors: ColorMap,
+
+    /// Per-tag bar colors (see [`TagColors`]); optional, defaults to empty
+    /// (every tag falls back to `Scheme::Sel`/`Scheme::Norm`).
+    #[serde(default)]
+    pub tagcolors: TagColors,
 
     pub keys: Vec<Key>,
 
