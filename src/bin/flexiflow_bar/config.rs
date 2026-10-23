@@ -53,7 +53,7 @@ pub fn load() -> BarConfig {
         return default;
     };
     if !path.exists() {
-        log::debug!("no user bar config at {path:?}, using defaults");
+        seed_default_config(&path, DEFAULT_LUA);
         return default;
     }
 
@@ -66,6 +66,18 @@ pub fn load() -> BarConfig {
             log::error!("failed to read bar config file {path:?}: {e:?}");
             default
         }
+    }
+}
+
+/// Copy the baked-in default to `path` so a first-time user gets an
+/// actual, editable file instead of silently running on an in-memory
+/// default. Best-effort: a write failure just logs and falls back to
+/// the in-memory default, same as before this existed.
+fn seed_default_config(path: &std::path::Path, source: &str) {
+    let Some(dir) = path.parent() else { return };
+    match std::fs::create_dir_all(dir).and_then(|()| std::fs::write(path, source)) {
+        Ok(()) => log::info!("wrote default bar config to {path:?}"),
+        Err(e) => log::warn!("could not write default bar config to {path:?}: {e:?}"),
     }
 }
 
@@ -90,5 +102,18 @@ mod tests {
     #[test]
     fn rejects_malformed_lua() {
         assert!(from_lua_source("return { interval_ms = \"not a number\" }").is_err());
+    }
+
+    #[test]
+    fn seed_default_config_writes_the_embedded_default_verbatim() {
+        let dir = std::env::temp_dir()
+            .join(format!("flexiflow-bar-config-test-{}", std::process::id()));
+        let path = dir.join("bar.lua");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        seed_default_config(&path, DEFAULT_LUA);
+
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), DEFAULT_LUA);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
