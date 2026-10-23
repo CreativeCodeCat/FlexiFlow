@@ -1,4 +1,4 @@
-# flexiflow-rs
+# FlexiFlow
 
 A tiling X11 window manager, written in Rust, built around dwm's
 model: one process, one X connection, raw Xlib calls, and a single
@@ -23,7 +23,7 @@ Configuration lives in Lua instead of a header file you recompile.
   bar instead of a single shared highlight color.
 - **Colorized status bar**: the bar's status text understands inline
   `^c#RRGGBB^` (foreground) / `^b#RRGGBB^` (background) / `^d^`
-  (reset) color codes. `flexiflow-rs -s "text"` feeds new status text
+  (reset) color codes. `FlexiFlow -s "text"` feeds new status text
   to an already-running instance; `scripts/flexiflow_bar` is a ready
   example script covering updates/kernel/battery/ram/cpu/keyboard/
   network/volume/clock.
@@ -51,18 +51,18 @@ Xlib/Xft/Xinerama, and fontconfig development headers.
 sudo make install
 ```
 
-Installs the `flexiflow-rs` binary, the `flexiflow_bar` status script,
+Installs the `FlexiFlow` binary, the `flexiflow_bar` status script,
 and an X session desktop entry (so display managers can offer
-"flexiflow-rs" as a session). Run `sudo make uninstall` to remove them
+"FlexiFlow" as a session). Run `sudo make uninstall` to remove them
 again.
 
 ## Running
 
-Either select the "flexiflow-rs" session from your display manager, or
+Either select the "FlexiFlow" session from your display manager, or
 add this to your `~/.xinitrc`:
 
 ```sh
-exec flexiflow-rs
+exec FlexiFlow
 ```
 
 ## Configuration

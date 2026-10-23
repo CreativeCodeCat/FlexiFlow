@@ -12,8 +12,8 @@
 # Segments whose optional dependency isn't installed (yay, a battery, pactl)
 # just omit themselves instead of erroring.
 #
-# Vendored into flexiflow-rs with one change below: it now talks to
-# `flexiflow-rs -s`, which parses the same ^c^/^b^ codes in core.rs's
+# Vendored into FlexiFlow with one change below: it now talks to
+# `FlexiFlow -s`, which parses the same ^c^/^b^ codes in core.rs's
 # drawbar.
 
 # ---- theme (matches the minimal-mistakes accents) --------------------
@@ -226,7 +226,7 @@ main() {
   while true; do
     top="$(seg_updates)$(seg_sep)$(seg_kernel)$(seg_sep)$(seg_battery)$(seg_sep)$(seg_ram)$(seg_sep)$(seg_cpu)$(seg_sep)$(seg_keyboard)$(seg_sep)$(seg_desktop)$(seg_sep)$(seg_network)$(seg_sep)$(seg_volume)$(seg_sep)$(seg_clock)"
 
-    flexiflow-rs -s "$top"
+    FlexiFlow -s "$top"
     sleep 0.5s
   done
 }

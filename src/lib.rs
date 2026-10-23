@@ -1,5 +1,5 @@
-//! flexiflow-rs: the `flexiflow` window manager. See `src/config.lua` for
-//! keys/rules/autostart.
+//! FlexiFlow: a tiling window manager based on dwm. See `src/config.lua`
+//! for keys/rules/autostart.
 #![allow(clippy::missing_safety_doc, clippy::not_unsafe_ptr_arg_deref)]
 
 use std::{

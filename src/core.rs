@@ -374,8 +374,8 @@ pub fn setup(dpy: *mut Display) -> State {
             utf8string,
             8,
             PropModeReplace,
-            c"flexiflow-rs".as_ptr() as *mut c_uchar,
-            12,
+            c"FlexiFlow".as_ptr() as *mut c_uchar,
+            9,
         );
         xlib::XChangeProperty(
             state.dpy,
@@ -1750,8 +1750,8 @@ pub fn updatebars(state: &mut State) {
         cursor: 0,
     };
     let mut ch = xlib::XClassHint {
-        res_name: c"flexiflow-rs".as_ptr().cast_mut(),
-        res_class: c"flexiflow-rs".as_ptr().cast_mut(),
+        res_name: c"FlexiFlow".as_ptr().cast_mut(),
+        res_class: c"FlexiFlow".as_ptr().cast_mut(),
     };
 
     unsafe {

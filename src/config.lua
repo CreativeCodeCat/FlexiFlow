@@ -1,5 +1,5 @@
--- flexiflow-rs config, baked in as this fork's defaults rather than left
--- for a user config file to override at runtime.
+-- FlexiFlow config, baked in as the defaults rather than left for a
+-- user config file to override at runtime.
 
 -- Constructor functions ------------------------------------------------
 function key(mod, keysym, func, arg)

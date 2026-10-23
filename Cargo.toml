@@ -1,9 +1,9 @@
 [package]
-name = "flexiflow-rs"
+name = "FlexiFlow"
 version = "0.2.0"
 edition = "2024"
 rust-version = "1.92"
-description = "A fork of rwm (itself a port of dwm) carrying the flexiflow window manager config"
+description = "A tiling window manager based on dwm"
 
 [lib]
 name = "rwm"

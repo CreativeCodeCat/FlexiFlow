@@ -1,4 +1,4 @@
-//! flexiflow-rs: a tiling window manager based on dwm.
+//! FlexiFlow: a tiling window manager based on dwm.
 
 use rwm::{cleanup, run, scan, setup};
 #[cfg(target_os = "linux")]
@@ -16,9 +16,9 @@ mod tests;
 /// `core.rs`'s `setup`) — this is what tools like fastfetch (and
 /// `xprop -root _NET_SUPPORTING_WM_CHECK`) read as the running window
 /// manager's name.
-const WM_NAME: &str = "flexiflow-rs";
+const WM_NAME: &str = "FlexiFlow";
 
-/// `flexiflow-rs -s TEXT`: like dwm's `xsetroot -name`, just stores
+/// `FlexiFlow -s TEXT`: like dwm's `xsetroot -name`, just stores
 /// `TEXT` as the root window's `WM_NAME` and exits - this is how the
 /// already-running instance picks up new status bar text, including the
 /// inline color codes `core.rs`'s `drawbar` parses out of it.
@@ -27,7 +27,7 @@ fn set_status_text(text: &str) {
     unsafe {
         let dpy = x11::xlib::XOpenDisplay(std::ptr::null_mut());
         if dpy.is_null() {
-            die("flexiflow-rs: cannot open display");
+            die("FlexiFlow: cannot open display");
         }
         let root = x11::xlib::XDefaultRootWindow(dpy);
         let c_text = std::ffi::CString::new(text).unwrap_or_default();
@@ -54,7 +54,7 @@ fn main() {
 
     let dpy = unsafe { x11::xlib::XOpenDisplay(std::ptr::null_mut()) };
     if dpy.is_null() {
-        die("flexiflow-rs: cannot open display");
+        die("FlexiFlow: cannot open display");
     }
 
     checkotherwm(dpy);
@@ -64,7 +64,7 @@ fn main() {
     #[cfg(target_os = "linux")]
     {
         let Ok((xcon, _)) = Connection::connect(None) else {
-            die("flexiflow-rs: cannot get xcb connection");
+            die("FlexiFlow: cannot get xcb connection");
         };
         state.xcon = Box::into_raw(Box::new(xcon));
     }
@@ -96,5 +96,5 @@ fn restart_self() -> ! {
     let err = std::process::Command::new(exe)
         .args(std::env::args_os().skip(1))
         .exec();
-    die(&format!("flexiflow-rs: failed to restart: {err}"));
+    die(&format!("FlexiFlow: failed to restart: {err}"));
 }
