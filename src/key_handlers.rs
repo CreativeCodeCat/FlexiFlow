@@ -1,7 +1,8 @@
 use std::cmp::max;
 use std::ffi::c_int;
+use std::io::Write as _;
 use std::os::unix::process::CommandExt;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::ptr::null_mut;
 
 use x11::xlib::{
@@ -20,7 +21,7 @@ use crate::core::{
     unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::enums::WM;
-use crate::{Arg, Client, Gaps, Monitor};
+use crate::{Arg, Client, Gaps, Layout, Monitor};
 use crate::{State, cfor};
 
 pub(crate) fn togglebar(state: &mut State, _arg: *const Arg) {
@@ -404,33 +405,57 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     }
 }
 
-/// Runs the `layoutmenu` script (expected on `$PATH`, piping
-/// `symbol name<TAB>index` lines into a dmenu-alike like `xmenu`) and
-/// switches to whichever layout's index the user picked. Blocks the
-/// event loop while the menu is open, same as vanilla dwm's own
-/// popen()-based `layoutmenu()` - there's no async IPC here, so this
-/// mirrors that rather than inventing some.
+/// Pipes `state.config.layouts` straight into `xmenu` (`"<symbol>\t
+/// <index>"` per line, xmenu's own item/command format) and switches
+/// to whichever layout's index the user picked. If `xmenu` isn't on
+/// `$PATH`, this is a silent no-op - no external script, nothing to
+/// install, nothing to keep in sync with the layouts list by hand.
+///
+/// Blocks the event loop while the menu is open, same as vanilla
+/// dwm's own popen()-based `layoutmenu()` - there's no async IPC
+/// here, so this mirrors that rather than inventing some.
 pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
-    let Ok(out) = Command::new("layoutmenu").output() else {
-        log::warn!("layoutmenu: failed to run `layoutmenu` (not on $PATH?)");
-        return;
+    let Ok(mut child) = Command::new("xmenu")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+    else {
+        return; // xmenu isn't installed - do nothing
     };
+
+    let menu = layout_menu_text(&state.config.layouts);
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = stdin.write_all(menu.as_bytes());
+    }
+
+    let Ok(out) = child.wait_with_output() else { return };
     if !out.status.success() {
         return;
     }
-    let Some(idx) = parse_layoutmenu_index(&String::from_utf8_lossy(&out.stdout)) else {
+    let Some(idx) = parse_layoutmenu_index(&String::from_utf8_lossy(&out.stdout))
+    else {
         return;
     };
     if idx >= state.config.layouts.len() {
-        log::warn!("layoutmenu: index {idx} is out of range");
         return;
     }
     setlayout(state, &Arg::L(Some(idx)) as *const Arg);
 }
 
-/// `scripts/layoutmenu`'s menu lines are `"<symbol> <name>\t<index>"`;
-/// a dmenu-alike like `xmenu` echoes the whole selected line back, so
-/// the index is whatever's after the last tab.
+/// `"<symbol>\t<index>"` per configured layout, in order - xmenu's own
+/// item/command format: it displays `<symbol>` but echoes `<index>`
+/// back on selection.
+fn layout_menu_text(layouts: &[Layout]) -> String {
+    layouts
+        .iter()
+        .enumerate()
+        .map(|(i, l)| format!("{}\t{i}\n", l.symbol))
+        .collect()
+}
+
+/// xmenu echoes the whole selected line back, so the index is
+/// whatever's after the last tab.
 fn parse_layoutmenu_index(output: &str) -> Option<usize> {
     output.trim().rsplit('\t').next()?.trim().parse().ok()
 }
@@ -992,5 +1017,27 @@ mod tests {
         assert_eq!(parse_layoutmenu_index(""), None);
         assert_eq!(parse_layoutmenu_index("no tabs here"), None);
         assert_eq!(parse_layoutmenu_index("label\tnot a number"), None);
+    }
+
+    #[test]
+    fn layout_menu_text_pairs_each_symbol_with_its_list_position() {
+        let layouts = vec![
+            Layout { symbol: "[]=".to_string(), arrange: None },
+            Layout { symbol: "[M]".to_string(), arrange: None },
+            Layout { symbol: "><>".to_string(), arrange: None },
+        ];
+        assert_eq!(layout_menu_text(&layouts), "[]=\t0\n[M]\t1\n><>\t2\n");
+    }
+
+    #[test]
+    fn layout_menu_text_round_trips_through_parse_layoutmenu_index() {
+        let layouts = vec![
+            Layout { symbol: "[]=".to_string(), arrange: None },
+            Layout { symbol: "[M]".to_string(), arrange: None },
+        ];
+        let menu = layout_menu_text(&layouts);
+        // whichever line xmenu would echo back for the 2nd entry
+        let picked_line = menu.lines().nth(1).unwrap();
+        assert_eq!(parse_layoutmenu_index(picked_line), Some(1));
     }
 }
