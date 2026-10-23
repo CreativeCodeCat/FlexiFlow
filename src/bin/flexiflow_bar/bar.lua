@@ -53,6 +53,7 @@ return {
         "ram",
         "cpu",
         "keyboard",
+        "desktop",
         "network",
         "volume",
         "clock",
