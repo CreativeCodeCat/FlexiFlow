@@ -1,6 +1,5 @@
-//! flexiflow-rs: a fork of [rwm](https://github.com/ntBre/rwm) (itself a Rust
-//! port of [dwm](https://dwm.suckless.org/)) carrying the `flexiflow`
-//! window manager config. See `src/config.lua` for keys/rules/autostart.
+//! flexiflow-rs: the `flexiflow` window manager. See `src/config.lua` for
+//! keys/rules/autostart.
 #![allow(clippy::missing_safety_doc, clippy::not_unsafe_ptr_arg_deref)]
 
 use std::{
@@ -155,19 +154,17 @@ pub struct Rule {
     pub noswallow: bool,
     pub monitor: c_int,
     /// Switch to the matched client's tag on manage, instead of only
-    /// assigning it (vanilla dwm/rwm never switches view here).
+    /// assigning it.
     #[serde(default)]
     pub focus: bool,
 }
 
-/// One slot of rwm's scratchpad mechanism, generalized from upstream's
-/// single global `scratchpadname`/`scratchpadcmd` (which matched a
-/// client's *title*) to however many are configured (flexiflow wants
-/// three: terminal, btop, pavucontrol). `class` is matched against a
-/// client's `WM_CLASS` instead - unlike a `--title` flag, not every
-/// scratchpad program lets you set its title (pavucontrol doesn't), but
-/// `WM_CLASS` is reliable for all of them. `cmd` is spawned when
-/// `togglescratch` finds no client tagged with this slot yet.
+/// One scratchpad slot (flexiflow wants three: terminal, btop,
+/// pavucontrol). `class` is matched against a client's `WM_CLASS` -
+/// unlike a `--title` flag, not every scratchpad program lets you set
+/// its title (pavucontrol doesn't), but `WM_CLASS` is reliable for all
+/// of them. `cmd` is spawned when `togglescratch` finds no client
+/// tagged with this slot yet.
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ScratchSpec {
     pub class: String,
@@ -221,7 +218,7 @@ pub struct Layout {
 }
 
 /// Per-tag/per-monitor gap configuration, ported from flexiflow's
-/// vanitygaps.c-derived `Gaps` (see the old penrose port's `state.rs`).
+/// vanitygaps.c-derived `Gaps`.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Gaps {

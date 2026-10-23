@@ -224,9 +224,8 @@ pub(crate) fn togglegaps(state: &mut State, _arg: *const Arg) {
 
 /// Adjust the focused client's `cfact` (its share of the master/stack
 /// column relative to its siblings there) by `arg.f`. `arg.f == 0.0` resets
-/// it back to the default of `1.0`, matching the old penrose port's
-/// `set_cfact` semantics; values are floored just above `0.25` so a client
-/// never collapses to nothing.
+/// it back to the default of `1.0`; values are floored just above `0.25`
+/// so a client never collapses to nothing.
 pub(crate) fn setcfact(state: &mut State, arg: *const Arg) {
     unsafe {
         if arg.is_null() {
@@ -381,11 +380,10 @@ pub(crate) fn setlayout(state: &mut State, arg: *const Arg) {
 }
 
 /// Cycle to the next (`arg.i == 1`) or previous (`arg.i == -1`) entry in
-/// `state.config.layouts`, wrapping around. The old penrose port cycled
-/// through all of its layouts this way (penrose's `Stack`); rwm's own
-/// `setlayout` only jumps to a specific index or toggles the two
-/// remembered slots, so this wraps that with the "current index" lookup
-/// needed to cycle through an arbitrary number of layouts.
+/// `state.config.layouts`, wrapping around. `setlayout` only jumps to a
+/// specific index or toggles the two remembered slots, so this wraps
+/// that with the "current index" lookup needed to cycle through an
+/// arbitrary number of layouts.
 pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     unsafe {
         if arg.is_null() {

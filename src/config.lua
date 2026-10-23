@@ -1,9 +1,7 @@
 -- flexiflow-rs config, baked in as this fork's defaults (the same spirit as
--- dwm's config.def.h / flexiflow's config.def.h) rather than left for
--- $XDG_CONFIG_HOME/rwm/config.lua to supply at runtime.
---
--- Status: all 5 phases of the penrose -> rwm migration plan are wired up
--- here (see the plan / git history for the rest).
+-- dwm's config.def.h / flexiflow's config.def.h) rather than left for a
+-- user config file to override at runtime.
+
 -- Constructor functions ------------------------------------------------
 function key(mod, keysym, func, arg)
     return {
@@ -39,8 +37,7 @@ function button(click, mask, button, func, arg)
 end
 
 -- `focus`, if true, switches the view to the matched client's tag on
--- manage (flexiflow's rules.rs always did this; vanilla dwm/rwm never
--- switches view from a rule match).
+-- manage (vanilla dwm never switches view from a rule match).
 function rule(
     class,
     instance,
@@ -68,8 +65,7 @@ end
 -- One scratchpad slot: `class` is matched against a client's WM_CLASS to
 -- recognize it, `cmd` is spawned if it isn't running yet. Each slot gets
 -- its own reserved tag bit, so `togglescratch`'s `arg.i` (the slot's
--- index into this list) toggles it independently of the others - unlike
--- upstream rwm's single global scratchpad.
+-- index into this list) toggles it independently of the others.
 function scratchpad(class, cmd)
     return {
         class = class,
@@ -788,8 +784,7 @@ rwm = {
             }
         ),
     },
-    -- all 13, same order/symbols as the old penrose port's `Kind` enum, so
-    -- M-space/M-C-comma/M-C-period (cyclelayout) visit them in the same order
+    -- M-space/M-C-comma/M-C-period (cyclelayout) visit these in order
     layouts = {
         {
             symbol = "[]=",

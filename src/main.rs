@@ -1,4 +1,4 @@
-//! flexiflow-rs: a tiling window manager based on dwm (via a fork of rwm).
+//! flexiflow-rs: a tiling window manager based on dwm.
 
 use rwm::{cleanup, run, scan, setup};
 #[cfg(target_os = "linux")]

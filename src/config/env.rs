@@ -44,8 +44,7 @@ pub(super) static HANDLERS: [(&str, &str); 46] = handler_fns! {
     cyclelayout, incrgaps, incrigaps, incrogaps, incrohgaps, incrovgaps,
     incrihgaps, incrivgaps, defaultgaps, togglegaps, setcfact,
     // layout `arrange` function names (matched in `LayoutFn::try_from`,
-    // not FUNC_MAP) - all 13 ported from flexiflow's vanitygaps.c-derived
-    // layouts.rs in the old penrose port
+    // not FUNC_MAP) - all 13 from flexiflow's vanitygaps.c-derived layouts
     tile, monocle, bstack, bstack_horiz, centered_master,
     centered_floating_master, deck, spiral, dwindle, gapless_grid, grid,
     horiz_grid, nrow_grid,

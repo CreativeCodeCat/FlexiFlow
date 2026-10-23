@@ -1,14 +1,8 @@
 //! Direct ports of the layout algorithms in flexiflow's `vanitygaps.c` (dwm's
-//! vanitygaps patch), carried over from the pure placement math already
-//! validated in the penrose port this project used before this migration
-//! (see the plan / git history). Each pure `fn(..) -> Vec<R>` below is that
-//! same math, basically unchanged; what's different from the penrose
-//! version is the harness around it: `tiled_clients`/`place` walk the real
-//! client linked list the way rwm's own stock `tile`/`monocle` always did,
-//! collect each client's `cfact`, and resize each client in turn,
-//! subtracting `2 * bw` the way vanilla dwm's `resize()` expects it
-//! pre-subtracted (penrose inset for borders itself, so the old port
-//! didn't need to).
+//! vanitygaps patch). Each pure `fn(..) -> Vec<R>` below is that same math;
+//! `tiled_clients`/`place` walk the real client linked list, collect each
+//! client's `cfact`, and resize each client in turn, subtracting `2 * bw`
+//! the way vanilla dwm's `resize()` expects it pre-subtracted.
 use std::ffi::{c_int, c_uint};
 
 use crate::{Client, Gaps, Monitor, State, cfor, is_visible, nexttiled, resize};
@@ -760,7 +754,7 @@ pub(crate) fn monocle(state: &mut State, m: *mut Monitor) {
             }
         });
         if n > 0 {
-            // override layout symbol, matching rwm's/dwm's stock monocle()
+            // override layout symbol, matching dwm's stock monocle()
             (*m).ltsymbol = format!("[{n}]");
         }
         let (clients, _) = tiled_clients(m);

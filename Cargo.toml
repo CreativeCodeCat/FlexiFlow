@@ -5,9 +5,6 @@ edition = "2024"
 rust-version = "1.92"
 description = "A fork of rwm (itself a port of dwm) carrying the flexiflow window manager config"
 
-# Keep the library crate importable as `rwm::...` everywhere it already is
-# (core.rs, handlers.rs, key_handlers.rs, layouts.rs, main.rs, tests.rs) so we
-# don't have to rewrite every `use rwm::` from the upstream source.
 [lib]
 name = "rwm"
 path = "src/lib.rs"

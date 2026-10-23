@@ -1,5 +1,4 @@
-# flexiflow-rs - a fork of rwm (itself a port of dwm) carrying the
-# flexiflow window manager config.
+# flexiflow-rs
 # See LICENSE file for copyright and license details.
 
 PREFIX = /usr
