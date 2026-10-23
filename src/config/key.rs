@@ -84,6 +84,7 @@ pub(crate) static FUNC_MAP: LazyLock<FnMap> = LazyLock::new(|| {
         ("resizemouse", resizemouse as FN),
         // layouts / gaps / cfact, added for flexiflow's config
         ("cyclelayout", cyclelayout as FN),
+        ("layoutmenu", layoutmenu as FN),
         ("incrgaps", incrgaps as FN),
         ("incrigaps", incrigaps as FN),
         ("incrogaps", incrogaps as FN),

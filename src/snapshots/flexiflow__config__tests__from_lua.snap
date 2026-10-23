@@ -1614,8 +1614,8 @@ Config {
                     "[func]",
                 ),
             ),
-            arg: I(
-                -1,
+            arg: L(
+                None,
             ),
         },
         Button {
@@ -1842,6 +1842,10 @@ Config {
                     "[func]",
                 ),
             ),
+        },
+        Layout {
+            symbol: "><>",
+            arrange: None,
         },
     ],
     scratchpads: [
