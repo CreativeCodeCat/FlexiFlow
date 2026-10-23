@@ -251,9 +251,13 @@ impl Config {
         };
 
         let config_path = base.join("flexiflow").join("config.lua");
+        if !config_path.exists() {
+            log::debug!("no user config at {config_path:?}, using defaults");
+            return Config::default();
+        }
 
-        Config::from_lua(config_path).unwrap_or_else(|e| {
-            log::error!("failed to read config file: {e:?}");
+        Config::from_lua(&config_path).unwrap_or_else(|e| {
+            log::error!("failed to read config file {config_path:?}: {e:?}");
             Config::default()
         })
     }
