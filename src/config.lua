@@ -731,9 +731,9 @@ flexiflow = {
     buttons = {
         -- left click cycles forward through all of `layouts` below,
         -- matching the M-space key (instead of setlayout's upstream
-        -- "toggle last two" behavior); right click opens the
-        -- layoutmenu script (scripts/layoutmenu, needs `make install`
-        -- and xmenu to be on $PATH) to jump straight to any of them
+        -- "toggle last two" behavior); right click pipes `layouts`
+        -- straight into xmenu (key_handlers.rs::layoutmenu) to jump
+        -- to any of them - a silent no-op if xmenu isn't installed
         button(
             ClkLtSymbol, 0, Button1, cyclelayout, {
                 I = 1,
@@ -841,8 +841,7 @@ flexiflow = {
             symbol = ">M>",
             arrange = centered_floating_master,
         },
-        -- index 13, matching scripts/layoutmenu's "NULL Layout" entry:
-        -- no arrange function (vanilla dwm's "><>" floating layout)
+        -- no arrange function: vanilla dwm's "><>" floating layout
         {
             symbol = "><>",
         },

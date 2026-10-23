@@ -29,10 +29,11 @@ install: all
 	mkdir -p ${DESTDIR}${SHAREPREFIX}/xsessions
 	install -m 755 ${BIN} ${DESTDIR}${PREFIX}/bin/FlexiFlow
 	install -m 755 ${BAR} ${DESTDIR}${PREFIX}/bin/flexiflow_bar
-	install -m 755 scripts/layoutmenu ${DESTDIR}${PREFIX}/bin/layoutmenu
 	install -m 644 FlexiFlow.desktop ${DESTDIR}${SHAREPREFIX}/xsessions/
 
 uninstall:
+	# layoutmenu is no longer installed (FlexiFlow pipes straight into
+	# xmenu now) but is still removed here to clean up older installs
 	rm -f ${DESTDIR}${PREFIX}/bin/FlexiFlow\
 		${DESTDIR}${PREFIX}/bin/flexiflow_bar\
 		${DESTDIR}${PREFIX}/bin/layoutmenu\

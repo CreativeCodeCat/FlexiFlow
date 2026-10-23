@@ -128,7 +128,8 @@ highlights - see `src/config.lua` for the complete list:
 |---|---|
 | Left/right-click a tag in the bar | View/toggle-view that tag |
 | `modkey` + left/right-click a tag in the bar | Move/toggle window to that tag |
-| Left/right-click the layout symbol | Cycle layout forward/backward |
+| Left-click the layout symbol | Cycle to the next layout |
+| Right-click the layout symbol | Open an `xmenu` picker to jump to any layout (no-op if `xmenu` isn't installed) |
 | Middle-click a window's title | Zoom it into the master area |
 | `modkey` + drag a window | Move it |
 | `modkey` + middle-click a window | Toggle floating |
