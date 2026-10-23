@@ -182,18 +182,18 @@ fn centered_master_(r: R, n: usize, nmaster: c_uint, mfact: f32, gaps: Gaps, cfa
     let rh_ = rh - 2 * oh - ih * ((n_stack / 2) as c_int - if n_stack % 2 != 0 { 0 } else { 1 });
 
     let lx = rx + ov;
-    let (mut ly, mut rx2, mut ry2, mut lw, mut rw) = (my0, 0, my0, 0, 0);
+    let (mut ly, mut rx2, mut ry2, mut lw, mut rsw) = (my0, 0, my0, 0, 0);
 
     if nm > 0 && n > nm {
         if n_stack > 1 {
             mw = ((rw - 2 * ov - 2 * iv) as f32 * mfact) as c_int;
             lw = (rw - mw - 2 * ov - 2 * iv) / 2;
-            rw = (rw - mw - 2 * ov - 2 * iv) - lw;
+            rsw = (rw - mw - 2 * ov - 2 * iv) - lw;
             mx += lw + iv;
         } else {
             mw = ((mw - iv) as f32 * mfact) as c_int;
             lw = 0;
-            rw = rw - mw - iv - 2 * ov;
+            rsw = rw - mw - iv - 2 * ov;
         }
         rx2 = mx + mw + iv;
         ry2 = my0;
@@ -229,7 +229,7 @@ fn centered_master_(r: R, n: usize, nmaster: c_uint, mfact: f32, gaps: Gaps, cfa
             li += 1;
         } else {
             let h = r_h[ri];
-            out.push(rect(rx2, ry2, rw, h));
+            out.push(rect(rx2, ry2, rsw, h));
             ry2 += h + ih;
             ri += 1;
         }
@@ -765,5 +765,49 @@ pub(crate) fn monocle(state: &mut State, m: *mut Monitor) {
         let r: R = ((*m).wx, (*m).wy, (*m).ww, (*m).wh);
         let rects = monocle_(r, n, (*m).gaps);
         place(state, &clients, &rects);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const NO_GAPS: Gaps = Gaps {
+        oh: 0,
+        ov: 0,
+        ih: 0,
+        iv: 0,
+        enabled: false,
+        smartgaps: false,
+    };
+
+    /// Regression test for a variable-shadowing bug: `centered_master_`
+    /// used to declare a second, zero-initialized `rw` that shadowed the
+    /// monitor-width `rw` from the function's top, so `mw`'s mfact
+    /// calculation silently read 0 instead of the real width whenever
+    /// there was more than one stack client - collapsing the master and
+    /// right columns to zero width.
+    #[test]
+    fn centered_master_splits_width_across_all_three_columns() {
+        let r: R = (0, 0, 1200, 800);
+        let cfacts = [1.0, 1.0, 1.0];
+        let rects = centered_master_(r, 3, 1, 0.5, NO_GAPS, &cfacts);
+
+        assert_eq!(rects.len(), 3);
+        for &(x, y, w, h) in &rects {
+            assert!(w > 0, "zero/negative width rect: {:?}", (x, y, w, h));
+            assert!(h > 0, "zero/negative height rect: {:?}", (x, y, w, h));
+        }
+
+        // left stack, master, right stack, left to right, none overlapping
+        let mut by_x = rects.clone();
+        by_x.sort_by_key(|&(x, ..)| x);
+        let (lx, _, lw, _) = by_x[0];
+        let (mx, _, mw, _) = by_x[1];
+        let (rx, _, rw, _) = by_x[2];
+        assert_eq!(lx, 0);
+        assert_eq!(lx + lw, mx);
+        assert_eq!(mx + mw, rx);
+        assert_eq!(rx + rw, 1200);
     }
 }
