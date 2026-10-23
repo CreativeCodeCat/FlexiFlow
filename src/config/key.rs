@@ -81,5 +81,17 @@ pub(crate) static FUNC_MAP: LazyLock<FnMap> = LazyLock::new(|| {
         // mouse handlers
         ("movemouse", movemouse as FN),
         ("resizemouse", resizemouse as FN),
+        // layouts / gaps / cfact, added for flexiflow's config
+        ("cyclelayout", cyclelayout as FN),
+        ("incrgaps", incrgaps as FN),
+        ("incrigaps", incrigaps as FN),
+        ("incrogaps", incrogaps as FN),
+        ("incrohgaps", incrohgaps as FN),
+        ("incrovgaps", incrovgaps as FN),
+        ("incrihgaps", incrihgaps as FN),
+        ("incrivgaps", incrivgaps as FN),
+        ("defaultgaps", defaultgaps as FN),
+        ("togglegaps", togglegaps as FN),
+        ("setcfact", setcfact as FN),
     ])
 });

@@ -20,7 +20,7 @@ use crate::core::{
     unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::enums::WM;
-use crate::{Arg, Client, Monitor};
+use crate::{Arg, Client, Gaps, Monitor};
 use crate::{State, cfor};
 
 pub(crate) fn togglebar(state: &mut State, _arg: *const Arg) {
@@ -131,6 +131,125 @@ pub(crate) fn setmfact(state: &mut State, arg: *const Arg) {
         let monitor = &mut *state.selmon;
         monitor.pertag.mfacts[monitor.pertag.curtag] = f;
         monitor.mfact = monitor.pertag.mfacts[monitor.pertag.curtag];
+        arrange(state, state.selmon);
+    }
+}
+
+/// Apply `f` to the selected monitor's current-tag gaps, syncing the
+/// pertag-remembered copy the same way `incnmaster`/`setmfact` do, then
+/// re-arrange. Shared by the `incr*gaps` family below.
+fn adjust_gaps(state: &mut State, f: impl FnOnce(&mut Gaps)) {
+    unsafe {
+        let monitor = &mut *state.selmon;
+        let g = &mut monitor.pertag.gaps[monitor.pertag.curtag];
+        f(g);
+        g.oh = g.oh.max(0);
+        g.ov = g.ov.max(0);
+        g.ih = g.ih.max(0);
+        g.iv = g.iv.max(0);
+        monitor.gaps = *g;
+        arrange(state, state.selmon);
+    }
+}
+
+/// Adjust all four gaps (outer + inner, horizontal + vertical) by `arg.i`.
+pub(crate) fn incrgaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| {
+        g.oh += d;
+        g.ov += d;
+        g.ih += d;
+        g.iv += d;
+    });
+}
+
+/// Adjust both inner gaps (between stacked clients) by `arg.i`.
+pub(crate) fn incrigaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| {
+        g.ih += d;
+        g.iv += d;
+    });
+}
+
+/// Adjust both outer gaps (screen edges) by `arg.i`.
+pub(crate) fn incrogaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| {
+        g.oh += d;
+        g.ov += d;
+    });
+}
+
+/// Adjust the outer horizontal gap (top/bottom edge) by `arg.i`.
+pub(crate) fn incrohgaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| g.oh += d);
+}
+
+/// Adjust the outer vertical gap (left/right edge) by `arg.i`.
+pub(crate) fn incrovgaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| g.ov += d);
+}
+
+/// Adjust the inner horizontal gap (between stacked clients) by `arg.i`.
+pub(crate) fn incrihgaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| g.ih += d);
+}
+
+/// Adjust the inner vertical gap (between master/stack columns) by `arg.i`.
+pub(crate) fn incrivgaps(state: &mut State, arg: *const Arg) {
+    let d = unsafe { (*arg).i() };
+    adjust_gaps(state, |g| g.iv += d);
+}
+
+/// Reset all four gaps on the current tag back to `state.config.gaps`.
+pub(crate) fn defaultgaps(state: &mut State, _arg: *const Arg) {
+    let d = state.config.gaps;
+    adjust_gaps(state, |g| {
+        g.oh = d;
+        g.ov = d;
+        g.ih = d;
+        g.iv = d;
+    });
+}
+
+/// Toggle gaps on/off for the current tag, keeping the configured pixel
+/// values (`enabled = false` just makes `Gaps::effective` return zeroes).
+pub(crate) fn togglegaps(state: &mut State, _arg: *const Arg) {
+    adjust_gaps(state, |g| g.enabled = !g.enabled);
+}
+
+/// Adjust the focused client's `cfact` (its share of the master/stack
+/// column relative to its siblings there) by `arg.f`. `arg.f == 0.0` resets
+/// it back to the default of `1.0`, matching the old penrose port's
+/// `set_cfact` semantics; values are floored just above `0.25` so a client
+/// never collapses to nothing.
+pub(crate) fn setcfact(state: &mut State, arg: *const Arg) {
+    unsafe {
+        if arg.is_null() {
+            return;
+        }
+        let sel = (*state.selmon).sel;
+        if sel.is_null()
+            || (*(*state.selmon).lt[(*state.selmon).sellt])
+                .arrange
+                .is_none()
+        {
+            return;
+        }
+        let d = (*arg).f();
+        if d == 0.0 {
+            (*sel).cfact = 1.0;
+        } else {
+            let next = (*sel).cfact + d;
+            if next <= 0.25 {
+                return;
+            }
+            (*sel).cfact = next;
+        }
         arrange(state, state.selmon);
     }
 }
@@ -258,6 +377,32 @@ pub(crate) fn setlayout(state: &mut State, arg: *const Arg) {
         } else {
             drawbar(state, state.selmon);
         }
+    }
+}
+
+/// Cycle to the next (`arg.i == 1`) or previous (`arg.i == -1`) entry in
+/// `state.config.layouts`, wrapping around. The old penrose port cycled
+/// through all of its layouts this way (penrose's `Stack`); rwm's own
+/// `setlayout` only jumps to a specific index or toggles the two
+/// remembered slots, so this wraps that with the "current index" lookup
+/// needed to cycle through an arbitrary number of layouts.
+pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
+    unsafe {
+        if arg.is_null() {
+            return;
+        }
+        let dir = (*arg).i();
+        let monitor = &*state.selmon;
+        let cur = monitor.lt[monitor.sellt];
+        let n = state.config.layouts.len() as c_int;
+        let idx = state
+            .config
+            .layouts
+            .iter()
+            .position(|l| std::ptr::eq(l, cur))
+            .unwrap_or(0) as c_int;
+        let next = ((idx + dir) % n + n) % n;
+        setlayout(state, &Arg::L(Some(next as usize)) as *const Arg);
     }
 }
 

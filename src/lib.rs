@@ -10,7 +10,11 @@ use std::{
 
 use config::key::FUNC_MAP;
 use enums::Clk;
-use layouts::{monocle, tile};
+use layouts::{
+    bstack, bstack_horiz, centered_floating_master, centered_master, deck,
+    dwindle, gapless_grid, grid, horiz_grid, monocle, nrow_grid, spiral,
+    tile,
+};
 use x11::xft::XftColor;
 
 pub mod config;
@@ -172,6 +176,17 @@ impl TryFrom<String> for LayoutFn {
         match value.as_str() {
             "tile" => Ok(Self(tile)),
             "monocle" => Ok(Self(monocle)),
+            "bstack" => Ok(Self(bstack)),
+            "bstack_horiz" => Ok(Self(bstack_horiz)),
+            "centered_master" => Ok(Self(centered_master)),
+            "centered_floating_master" => Ok(Self(centered_floating_master)),
+            "deck" => Ok(Self(deck)),
+            "spiral" => Ok(Self(spiral)),
+            "dwindle" => Ok(Self(dwindle)),
+            "gapless_grid" => Ok(Self(gapless_grid)),
+            "grid" => Ok(Self(grid)),
+            "horiz_grid" => Ok(Self(horiz_grid)),
+            "nrow_grid" => Ok(Self(nrow_grid)),
             s => Err(format!("unknown layout `{s}`")),
         }
     }
@@ -191,6 +206,38 @@ pub struct Layout {
     pub arrange: Option<LayoutFn>,
 }
 
+/// Per-tag/per-monitor gap configuration, ported from flexiflow's
+/// vanitygaps.c-derived `Gaps` (see the old penrose port's `state.rs`).
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Gaps {
+    /// Outer horizontal gap (top/bottom screen edge)
+    pub oh: c_int,
+    /// Outer vertical gap (left/right screen edge)
+    pub ov: c_int,
+    /// Inner horizontal gap (between stacked clients)
+    pub ih: c_int,
+    /// Inner vertical gap (between master/stack columns)
+    pub iv: c_int,
+    pub enabled: bool,
+    /// Collapse outer gaps to 0 when there's a single client
+    pub smartgaps: bool,
+}
+
+impl Gaps {
+    /// Effective gaps for `n` clients, mirroring `getgaps` in vanitygaps.c.
+    pub fn effective(&self, n: usize) -> (c_int, c_int, c_int, c_int) {
+        let outer_enabled = !(self.smartgaps && n == 1) && self.enabled;
+        let inner_enabled = self.enabled;
+        (
+            self.oh * outer_enabled as c_int,
+            self.ov * outer_enabled as c_int,
+            self.ih * inner_enabled as c_int,
+            self.iv * inner_enabled as c_int,
+        )
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Pertag {
     /// Current tag
@@ -207,6 +254,8 @@ pub struct Pertag {
     pub ltidxs: Vec<[*const Layout; 2]>,
     /// Whether to display the bar
     pub showbars: Vec<bool>,
+    /// Gap configuration
+    pub gaps: Vec<Gaps>,
 }
 
 #[repr(C)]
@@ -237,6 +286,7 @@ pub struct Monitor {
     pub barwin: Window,
     pub lt: [*const Layout; 2usize],
     pub pertag: Pertag,
+    pub gaps: Gaps,
 }
 
 #[repr(C)]
@@ -264,6 +314,10 @@ pub struct Client {
     pub hintsvalid: bool,
     pub bw: c_int,
     pub oldbw: c_int,
+    /// Proportion of the master/stack column this client takes up relative
+    /// to its siblings there, from flexiflow's vanitygaps.c-derived cfacts
+    /// sub-patch. Follows the *client*, not the tag — unlike `Gaps`.
+    pub cfact: f32,
     pub tags: c_uint,
     pub isfixed: bool,
     pub isfloating: bool,

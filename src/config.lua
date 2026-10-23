@@ -2,9 +2,8 @@
 -- dwm's config.def.h / flexiflow's config.def.h) rather than left for
 -- $XDG_CONFIG_HOME/rwm/config.lua to supply at runtime.
 --
--- Status: Phase 2 of the penrose -> rwm migration. Gaps, cfact, layout
--- cycling (Phase 3) and the multi-scratchpad bindings + status2d bar
--- (Phase 4) are not wired up yet; see the plan for the rest.
+-- Status: Phase 3 of the penrose -> rwm migration. The multi-scratchpad
+-- bindings + status2d bar (Phase 4) are not wired up yet; see the plan.
 
 -- Constructor functions ------------------------------------------------
 
@@ -85,11 +84,37 @@ keys = {
    key(s_mod, XK_q, killclient, {I = 0}),
    key(s_mod, XK_space, togglefloating, {I = 0}),
 
-   -- mfact / nmaster
+   -- layout / mfact / nmaster
+   key(modkey, XK_space, cyclelayout, {I = 1}),
+   key(modkey|ControlMask, XK_comma, cyclelayout, {I = -1}),
+   key(modkey|ControlMask, XK_period, cyclelayout, {I = 1}),
    key(modkey, XK_h, setmfact, {F = -0.05}),
    key(modkey, XK_l, setmfact, {F = 0.05}),
    key(modkey, XK_i, incnmaster, {I = 1}),
    key(modkey, XK_u, incnmaster, {I = -1}),
+
+   -- cfact (master/stack column share, follows the client)
+   key(s_mod, XK_h, setcfact, {F = -0.25}),
+   key(s_mod, XK_l, setcfact, {F = 0.25}),
+   key(s_mod, XK_o, setcfact, {F = 0.0}),
+
+   -- gaps
+   key(s_mod, XK_u, incrgaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_u, incrgaps, {I = -1}),
+   key(s_mod, XK_i, incrigaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_i, incrigaps, {I = -1}),
+   key(modkey|ControlMask, XK_o, incrogaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_o, incrogaps, {I = -1}),
+   key(modkey|ControlMask, XK_Up, incrohgaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_Up, incrohgaps, {I = -1}),
+   key(modkey|ControlMask, XK_Right, incrovgaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_Right, incrovgaps, {I = -1}),
+   key(modkey|ControlMask, XK_Down, incrihgaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_Down, incrihgaps, {I = -1}),
+   key(modkey|ControlMask, XK_Left, incrivgaps, {I = 1}),
+   key(modkey|ControlMask|ShiftMask, XK_Left, incrivgaps, {I = -1}),
+   key(modkey|ControlMask|ShiftMask, XK_d, defaultgaps, {I = 0}),
+   key(modkey, XK_g, togglegaps, {I = 0}),
 
    -- screens / monitors
    key(modkey, XK_bracketright, focusmon, {I = 1}),
@@ -147,6 +172,8 @@ rwm = {
    topbar = true,
    mfact = 0.5,
    nmaster = 1,
+   gaps = 10,
+   smartgaps = false,
    resize_hints = false,
    lock_fullscreen = true,
    fonts = {"Hack:size=10"},
@@ -196,7 +223,7 @@ rwm = {
    showsystray = true,
    buttons = {
 	  button(ClkLtSymbol, 0, Button1, setlayout),
-	  button(ClkLtSymbol, 0, Button3, setlayout, {L = 2}),
+	  button(ClkLtSymbol, 0, Button3, setlayout, {L = 1}),
 	  button(ClkWinTitle, 0, Button2, zoom, {I = 0}),
 	  button(ClkStatusText, 0, Button2, spawn, {V = termcmd}),
 	  button(ClkClientWin, modkey, Button1, movemouse, {I = 0}),
@@ -208,10 +235,22 @@ rwm = {
 	  button(ClkTagBar, modkey, Button1, tag, {I = 0}),
 	  button(ClkTagBar, modkey, Button3, toggletag, {I = 0}),
    },
+   -- all 13, same order/symbols as the old penrose port's `Kind` enum, so
+   -- M-space/M-C-comma/M-C-period (cyclelayout) visit them in the same order
    layouts = {
-	  {symbol = "[]=", arrange = tile },
-	  {symbol = "><>", arrange = nil },
-	  {symbol = "[M]", arrange = monocle },
+	  {symbol = "[]=", arrange = tile},
+	  {symbol = "[M]", arrange = monocle},
+	  {symbol = "[@]", arrange = spiral},
+	  {symbol = "[D]", arrange = dwindle},
+	  {symbol = "H[]", arrange = deck},
+	  {symbol = "TTT", arrange = bstack},
+	  {symbol = "===", arrange = bstack_horiz},
+	  {symbol = "HHH", arrange = grid},
+	  {symbol = "###", arrange = nrow_grid},
+	  {symbol = "---", arrange = horiz_grid},
+	  {symbol = ":::", arrange = gapless_grid},
+	  {symbol = "|M|", arrange = centered_master},
+	  {symbol = ">M>", arrange = centered_floating_master},
    },
    scratchpadname = "scratchpad",
 

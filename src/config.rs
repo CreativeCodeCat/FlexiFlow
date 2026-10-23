@@ -68,6 +68,16 @@ pub struct Config {
     /// Number of clients in master area
     pub nmaster: c_int,
 
+    /// Default gap size in pixels (outer and inner, horizontal and
+    /// vertical all start equal to this; each can be adjusted
+    /// independently afterwards)
+    #[serde(default = "default_gaps")]
+    pub gaps: c_int,
+
+    /// Collapse outer gaps to 0 when a tag has a single client
+    #[serde(default)]
+    pub smartgaps: bool,
+
     /// Respect size hints in tiled resizals
     pub resize_hints: bool,
 
@@ -111,6 +121,10 @@ pub struct Config {
     /// Commands (argv lists) to spawn once on startup.
     #[serde(default)]
     pub autostart: Vec<Vec<String>>,
+}
+
+fn default_gaps() -> c_int {
+    10
 }
 
 unsafe impl Send for Config {}

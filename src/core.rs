@@ -15,8 +15,8 @@ use crate::xembed::{
     XEMBED_WINDOW_DEACTIVATE,
 };
 use crate::{
-    Arg, Client, ICONIC_STATE, Layout, Monitor, NORMAL_STATE, Pertag, State,
-    Systray, WITHDRAWN_STATE, Window, drw, handlers, x,
+    Arg, Client, Gaps, ICONIC_STATE, Layout, Monitor, NORMAL_STATE, Pertag,
+    State, Systray, WITHDRAWN_STATE, Window, drw, handlers, x,
 };
 use libc::{c_long, c_uchar, pid_t, sigaction};
 use x11::keysym::XK_Num_Lock;
@@ -155,6 +155,14 @@ pub fn createmon(state: &State) -> *mut Monitor {
         (*m).lt[0] = &state.config.layouts[0];
         (*m).lt[1] = &state.config.layouts[1 % state.config.layouts.len()];
         (*m).ltsymbol = state.config.layouts[0].symbol.clone();
+        (*m).gaps = Gaps {
+            oh: state.config.gaps,
+            ov: state.config.gaps,
+            ih: state.config.gaps,
+            iv: state.config.gaps,
+            enabled: true,
+            smartgaps: state.config.smartgaps,
+        };
 
         (*m).pertag = Pertag {
             curtag: 1,
@@ -164,6 +172,7 @@ pub fn createmon(state: &State) -> *mut Monitor {
             sellts: vec![(*m).sellt; state.config.tags.len() + 1],
             ltidxs: vec![(*m).lt; state.config.tags.len() + 1],
             showbars: vec![(*m).showbar; state.config.tags.len() + 1],
+            gaps: vec![(*m).gaps; state.config.tags.len() + 1],
         };
     }
 
@@ -2475,6 +2484,7 @@ pub fn manage(state: &mut State, w: Window, wa: *mut xlib::XWindowAttributes) {
         let wa = *wa;
         let c: *mut Client = util::ecalloc(1, size_of::<Client>()) as *mut _;
         (*c).win = w;
+        (*c).cfact = 1.0;
         (*c).pid = winpid(state, w);
         (*c).x = wa.x;
         (*c).oldx = wa.x;

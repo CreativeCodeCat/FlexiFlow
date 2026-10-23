@@ -9,6 +9,8 @@ Config {
     topbar: true,
     mfact: 0.5,
     nmaster: 1,
+    gaps: 10,
+    smartgaps: false,
     resize_hints: false,
     lock_fullscreen: true,
     fonts: [
@@ -113,6 +115,36 @@ Config {
         },
         Key {
             mod_: 64,
+            keysym: 32,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 44,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 46,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 64,
             keysym: 104,
             func: Some(
                 "[func]",
@@ -149,6 +181,196 @@ Config {
             ),
             arg: I(
                 -1,
+            ),
+        },
+        Key {
+            mod_: 65,
+            keysym: 104,
+            func: Some(
+                "[func]",
+            ),
+            arg: F(
+                -0.25,
+            ),
+        },
+        Key {
+            mod_: 65,
+            keysym: 108,
+            func: Some(
+                "[func]",
+            ),
+            arg: F(
+                0.25,
+            ),
+        },
+        Key {
+            mod_: 65,
+            keysym: 111,
+            func: Some(
+                "[func]",
+            ),
+            arg: F(
+                0.0,
+            ),
+        },
+        Key {
+            mod_: 65,
+            keysym: 117,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 117,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 65,
+            keysym: 105,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 105,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 111,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 111,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 65362,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 65362,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 65363,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 65363,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 65364,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 65364,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 68,
+            keysym: 65361,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 65361,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                -1,
+            ),
+        },
+        Key {
+            mod_: 69,
+            keysym: 100,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+        },
+        Key {
+            mod_: 64,
+            keysym: 103,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
             ),
         },
         Key {
@@ -1309,7 +1531,7 @@ Config {
             ),
             arg: L(
                 Some(
-                    2,
+                    1,
                 ),
             ),
         },
@@ -1443,11 +1665,95 @@ Config {
             ),
         },
         Layout {
-            symbol: "><>",
-            arrange: None,
+            symbol: "[M]",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
         },
         Layout {
-            symbol: "[M]",
+            symbol: "[@]",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "[D]",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "H[]",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "TTT",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "===",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "HHH",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "###",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "---",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: ":::",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: "|M|",
+            arrange: Some(
+                LayoutFn(
+                    "[func]",
+                ),
+            ),
+        },
+        Layout {
+            symbol: ">M>",
             arrange: Some(
                 LayoutFn(
                     "[func]",
