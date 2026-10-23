@@ -1,15 +1,15 @@
-# flexiflow-rs
+# FlexiFlow
 # See LICENSE file for copyright and license details.
 
 PREFIX = /usr
 SHAREPREFIX = /usr/share
 
-BIN = target/release/flexiflow-rs
+BIN = target/release/FlexiFlow
 
 all: options ${BIN}
 
 options:
-	@echo flexiflow-rs build options:
+	@echo FlexiFlow build options:
 	@echo "PREFIX      = ${PREFIX}"
 	@echo "SHAREPREFIX = ${SHAREPREFIX}"
 
@@ -22,13 +22,13 @@ clean:
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	mkdir -p ${DESTDIR}${SHAREPREFIX}/xsessions
-	install -m 755 ${BIN} ${DESTDIR}${PREFIX}/bin/flexiflow-rs
+	install -m 755 ${BIN} ${DESTDIR}${PREFIX}/bin/FlexiFlow
 	install -m 755 scripts/flexiflow_bar ${DESTDIR}${PREFIX}/bin/flexiflow_bar
-	install -m 644 flexiflow-rs.desktop ${DESTDIR}${SHAREPREFIX}/xsessions/
+	install -m 644 FlexiFlow.desktop ${DESTDIR}${SHAREPREFIX}/xsessions/
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/flexiflow-rs\
+	rm -f ${DESTDIR}${PREFIX}/bin/FlexiFlow\
 		${DESTDIR}${PREFIX}/bin/flexiflow_bar\
-		${DESTDIR}${SHAREPREFIX}/xsessions/flexiflow-rs.desktop
+		${DESTDIR}${SHAREPREFIX}/xsessions/FlexiFlow.desktop
 
 .PHONY: all options clean install uninstall

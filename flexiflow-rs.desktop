@@ -1,7 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=flexiflow-rs
-Comment=flexiflow-rs Session
-Icon=flexiflow
-Exec=flexiflow-rs
-Type=XSession
