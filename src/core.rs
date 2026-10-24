@@ -1234,8 +1234,7 @@ pub fn updatesystray(state: &mut State) {
         let mut i: *mut Client;
         let m: *mut Monitor = systraytomon(state, null_mut());
         let mut x: c_int = (*m).mx + (*m).mw;
-        let sw = textw(&mut state.drw, &state.stext, 0)
-            + state.config.systrayspacing as i32;
+        let sw = status_textw(state) + state.config.systrayspacing as i32;
         let mut w = 1;
 
         if !state.config.showsystray {
@@ -1456,6 +1455,17 @@ fn parse_status_segments(
     segs
 }
 
+/// Pixel width of `state.stext` as `draw_status2d` draws it, i.e. with
+/// its inline color codes stripped - a plain `textw(&state.stext)`
+/// measures them as literal text, which for flexiflow_bar's output comes
+/// out wider than the whole screen.
+pub fn status_textw(state: &mut State) -> c_int {
+    parse_status_segments(&state.stext, "", "")
+        .iter()
+        .map(|(text, ..)| textw(&mut state.drw, text, 0))
+        .sum()
+}
+
 /// Render `state.stext`'s status2d segments right-aligned against
 /// `x_end`, each in its own fg/bg color, returning the total pixel width
 /// drawn (status text + the same left/right padding the old single-scheme
@@ -1474,24 +1484,25 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     let total_raw: c_int = raw_widths.iter().sum();
     let tw = total_raw + state.lrpad / 2 + 2;
 
-    let mut x = x_end - tw;
-    for (i, (text, fg, bg)) in segs.iter().enumerate() {
-        let (Ok(fgc), Ok(bgc)) = (CString::new(fg.as_str()), CString::new(bg.as_str())) else {
-            x += raw_widths[i];
-            continue;
-        };
-        let scm = drw::scm_create(&state.drw, &[fgc, bgc], 2);
-        if scm.len() < 2 {
-            x += raw_widths[i];
-            continue;
+    // fill the padding on both sides in the normal scheme up front - the
+    // runs below only paint under their own text, so otherwise the
+    // padding keeps whatever the shared pixmap last had there
+    drw::setscheme(&mut state.drw, state.scheme[Scheme::Norm].clone());
+    drw::rect(&mut state.drw, x_end - tw, 0, tw as c_uint, h, true, true);
+
+    let mut x = x_end - tw + (state.lrpad / 2 - 2).max(0);
+    for ((text, fg, bg), w) in segs.iter().zip(raw_widths) {
+        // a color X can't parse falls back to the normal scheme
+        let scm = match (CString::new(fg.as_str()), CString::new(bg.as_str())) {
+            (Ok(fgc), Ok(bgc)) => drw::scm_try_create(&state.drw, &[fgc, bgc]),
+            _ => None,
         }
+        .unwrap_or_else(|| state.scheme[Scheme::Norm].clone());
         drw::setscheme(&mut state.drw, scm);
-        let lpad = if i == 0 { (state.lrpad / 2 - 2).max(0) as u32 } else { 0 };
-        let w = raw_widths[i] as u32 + lpad;
         unsafe {
-            drw::text(&mut state.drw, x, 0, w, h, lpad, text, 0);
+            drw::text(&mut state.drw, x, 0, w as c_uint, h, 0, text, 0);
         }
-        x += raw_widths[i] + lpad as c_int;
+        x += w;
     }
 
     tw
