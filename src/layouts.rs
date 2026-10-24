@@ -216,13 +216,13 @@ fn centered_master_(r: R, n: usize, nmaster: c_uint, mfact: f32, gaps: Gaps, cfa
 
     let mut out = Vec::with_capacity(n);
     let mut my = my0;
+    for &h in &m_h {
+        out.push(rect(mx, my, mw, h));
+        my += h + ih;
+    }
     let (mut li, mut ri) = (0usize, 0usize);
-    for i in 0..n {
-        if i < n_master {
-            let h = m_h[i];
-            out.push(rect(mx, my, mw, h));
-            my += h + ih;
-        } else if (i - n_master) % 2 != 0 {
+    for i in n_master..n {
+        if (i - n_master) % 2 != 0 {
             let h = l_h[li];
             out.push(rect(lx, ly, lw, h));
             ly += h + ih;
@@ -323,16 +323,14 @@ fn deck_(r: R, n: usize, nmaster: c_uint, mfact: f32, gaps: Gaps, cfacts: &[f32]
 
     let mut out = Vec::with_capacity(n);
     let mut my = my0;
-    for i in 0..n {
-        if i < nm {
-            let h = m_h[i];
-            out.push(rect(mx, my, mw, h));
-            my += h + ih;
-        } else {
-            // deck: every stacked client gets the exact same rect (cards in
-            // a deck)
-            out.push(rect(sx, sy, sw, sh));
-        }
+    for &h in &m_h {
+        out.push(rect(mx, my, mw, h));
+        my += h + ih;
+    }
+    // deck: every stacked client gets the exact same rect (cards in a
+    // deck)
+    for _ in nm..n {
+        out.push(rect(sx, sy, sw, sh));
     }
     out
 }
@@ -357,7 +355,9 @@ fn fibonacci_(r: R, n: usize, gaps: Gaps, s: bool) -> Vec<R> {
 
     for _ in 0..n {
         if recurse {
-            if (i % 2 == 1 && (nh - ih) / 2 <= 0) || (i % 2 == 0 && (nw - iv) / 2 <= 0) {
+            if (i % 2 == 1 && (nh - ih) / 2 <= 0)
+                || (i.is_multiple_of(2) && (nw - iv) / 2 <= 0)
+            {
                 recurse = false;
             }
             if recurse && i < n - 1 {
