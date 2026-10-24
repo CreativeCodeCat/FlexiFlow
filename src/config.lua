@@ -866,7 +866,7 @@ flexiflow = {
             "dunst",
         },
         {
-            "clipmenu-daemon",
+            "clipmenud",
         },
         {
             "nm-applet",
@@ -877,8 +877,12 @@ flexiflow = {
         {
             "pasystray",
         },
+        -- restore the wallpaper feh last set; through sh because
+        -- autostart runs commands directly, so nothing expands `~`
         {
-            "cbatticon",
+            "sh",
+            "-c",
+            "~/.fehbg",
         },
         -- status bar segments (src/bin/flexiflow_bar); needs `make install`
         -- to be on $PATH, same as every other entry here

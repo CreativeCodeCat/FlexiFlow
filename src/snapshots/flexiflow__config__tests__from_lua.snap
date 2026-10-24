@@ -1881,7 +1881,7 @@ Config {
             "dunst",
         ],
         [
-            "clipmenu-daemon",
+            "clipmenud",
         ],
         [
             "nm-applet",
@@ -1893,7 +1893,9 @@ Config {
             "pasystray",
         ],
         [
-            "cbatticon",
+            "sh",
+            "-c",
+            "~/.fehbg",
         ],
         [
             "flexiflow_bar",
