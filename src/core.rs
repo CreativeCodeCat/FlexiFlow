@@ -1690,7 +1690,7 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
                 drw::setscheme(
                     &mut state.drw,
                     state.scheme[if m == state.selmon {
-                        Scheme::Sel
+                        Scheme::Title
                     } else {
                         Scheme::Norm
                     }]

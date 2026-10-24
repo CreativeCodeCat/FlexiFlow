@@ -21,8 +21,9 @@ Configuration lives in Lua instead of a header file you recompile.
   `src/config.lua`, with no rebuild required to change them.
 - **Per-tag bar colors**: each tag gets its own accent color in the
   bar instead of a single shared highlight color, and is tinted with
-  it while the pointer is over it. The layout symbol and power button
-  take their own colors from `colors.layout` and `colors.power`.
+  it while the pointer is over it. The layout symbol, power button and
+  focused window's title take their own colors from `colors.layout`,
+  `colors.power` and `colors.title`.
 - **Colorized status bar**: the bar's status text understands inline
   `^c#RRGGBB^` (foreground) / `^b#RRGGBB^` (background) / `^d^`
   (reset) color codes. `FlexiFlow -b "text"` feeds new status text

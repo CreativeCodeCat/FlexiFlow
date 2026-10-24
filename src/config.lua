@@ -698,6 +698,13 @@ flexiflow = {
             "#CC3333",
             "#CC3333",
         },
+        -- the focused window's title: on the bar background, in the
+        -- focus color (drawn in `sel` without this)
+        title = {
+            border_focused,
+            foreground,
+            foreground,
+        },
     },
     tagcolors = tagcolors(foreground, tag_accents),
     keys = keys,

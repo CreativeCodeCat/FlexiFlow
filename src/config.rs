@@ -27,7 +27,7 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
     fn try_from(
         mut value: HashMap<String, Vec<String>>,
     ) -> Result<Self, Self::Error> {
-        let mut ret = vec![vec![]; 4];
+        let mut ret = vec![vec![]; 5];
         let norm = value.remove("norm").ok_or("missing key norm")?;
         let sel = value.remove("sel").ok_or("missing key sel")?;
 
@@ -47,11 +47,14 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
             .map(CString::new)
             .collect::<Result<_, _>>()?;
 
-        // the bar's two buttons are optional, drawn like the rest of the
-        // bar (SchemeNorm) unless they're given their own colors
-        for (key, scheme) in
-            [("layout", Scheme::Layout), ("power", Scheme::Power)]
-        {
+        // the bar's two buttons and window title are optional: without
+        // their own colors, the buttons are drawn like the rest of the bar
+        // (SchemeNorm) and the title like the selection (SchemeSel)
+        for (key, scheme, fallback) in [
+            ("layout", Scheme::Layout, Scheme::Norm),
+            ("power", Scheme::Power, Scheme::Norm),
+            ("title", Scheme::Title, Scheme::Sel),
+        ] {
             ret[scheme as usize] = match value.remove(key) {
                 Some(colors) if colors.len() != 3 => {
                     return Err(format!(
@@ -64,7 +67,7 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
                     .into_iter()
                     .map(CString::new)
                     .collect::<Result<_, _>>()?,
-                None => ret[Scheme::Norm as usize].clone(),
+                None => ret[fallback as usize].clone(),
             };
         }
 
@@ -357,6 +360,7 @@ mod tests {
 
         assert_eq!(got.0[Scheme::Layout as usize], cstrings(norm));
         assert_eq!(got.0[Scheme::Power as usize], cstrings(power));
+        assert_eq!(got.0[Scheme::Title as usize], cstrings(sel));
     }
 
     #[test]

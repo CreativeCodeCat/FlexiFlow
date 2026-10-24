@@ -14,6 +14,8 @@ pub enum Scheme {
     Layout,
     /// the bar's power button
     Power,
+    /// the focused window's title in the bar
+    Title,
 }
 
 /// Clicks
