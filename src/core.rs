@@ -288,6 +288,8 @@ pub fn setup(dpy: *mut Display) -> State {
             XInternAtom(state.dpy, c"WM_STATE".as_ptr(), False);
         state.wmatom[WM::TakeFocus as usize] =
             XInternAtom(state.dpy, c"WM_TAKE_FOCUS".as_ptr(), False);
+        state.wmatom[WM::SetLayout as usize] =
+            XInternAtom(state.dpy, crate::SETLAYOUT_ATOM.as_ptr(), False);
 
         state.netatom[Net::ActiveWindow as usize] =
             XInternAtom(state.dpy, c"_NET_ACTIVE_WINDOW".as_ptr(), False);

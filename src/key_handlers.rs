@@ -1,7 +1,6 @@
 use std::cmp::max;
 use std::ffi::c_int;
-use std::io::{Read as _, Write as _};
-use std::process::{Command, Stdio};
+use std::process::Command;
 use std::ptr::null_mut;
 
 use x11::xlib::{
@@ -405,68 +404,25 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     }
 }
 
-/// Pipes `state.config.layouts` straight into `xmenu` (`"<symbol>
+/// Pipes `state.config.layouts` into `xmenu` (`"<symbol>
 /// <description>\t<index>"` per line, xmenu's own item/output format)
-/// and switches to whichever layout's index the user picked. If `xmenu`
-/// isn't on `$PATH`, this is a silent no-op - no external script,
-/// nothing to install, nothing to keep in sync with the layouts list by
-/// hand.
+/// and hands whichever index the user picks to `FlexiFlow -l`, which
+/// asks this instance to switch to it (see `clientmessage`).
 ///
-/// Blocks the event loop while the menu is open, same as vanilla
-/// dwm's own popen()-based `layoutmenu()` - there's no async IPC
-/// here, so this mirrors that rather than inventing some.
+/// The whole pipeline runs in the background under `sh`, so the event
+/// loop keeps going while the menu is open instead of blocking on
+/// xmenu. Esc, a click outside the menu, or a missing `xmenu` just ends
+/// the pipeline without running `FlexiFlow -l`.
 pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
-    let mut child = match spawn_child(
-        Command::new("xmenu")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped()),
-    ) {
-        Ok(child) => child,
-        Err(e) => {
-            log::debug!("layoutmenu: couldn't spawn xmenu ({e}) - not installed?");
-            return;
-        }
-    };
-
+    // the menu text goes in as $1 rather than being spliced into the
+    // script, so no symbol or description can be mistaken for shell
+    const SCRIPT: &str = r#"i=$(printf '%s' "$1" | xmenu) && [ -n "$i" ] && exec FlexiFlow -l "$i""#;
     let menu = layout_menu_text(&state.config.layouts);
-    if let Some(mut stdin) = child.stdin.take()
-        && let Err(e) = stdin.write_all(menu.as_bytes())
+    if let Err(e) =
+        spawn_child(Command::new("sh").args(["-c", SCRIPT, "sh", &menu]))
     {
-        log::warn!("layoutmenu: failed writing to xmenu's stdin: {e}");
+        log::warn!("layoutmenu: failed to spawn sh: {e}");
     }
-
-    // Read the pick straight off stdout (EOF once xmenu exits) rather
-    // than going by its exit status: setup() ignores SIGCHLD with
-    // SA_NOCLDWAIT, so the kernel reaps xmenu itself and any wait() on
-    // it just fails with ECHILD - which used to drop every selection.
-    let mut stdout = String::new();
-    if let Some(mut out) = child.stdout.take()
-        && let Err(e) = out.read_to_string(&mut stdout)
-    {
-        log::warn!("layoutmenu: failed reading xmenu's output: {e}");
-        return;
-    }
-    // only reaps anything if SIGCHLD handling ever changes; ECHILD otherwise
-    let _ = child.wait();
-    if stdout.trim().is_empty() {
-        // normal: the user pressed Esc or clicked outside the menu
-        log::debug!("layoutmenu: xmenu closed without a selection");
-        return;
-    }
-
-    let Some(idx) = parse_layoutmenu_index(&stdout) else {
-        log::warn!("layoutmenu: couldn't parse an index out of xmenu's output: {stdout:?}");
-        return;
-    };
-    if idx >= state.config.layouts.len() {
-        log::warn!(
-            "layoutmenu: xmenu picked index {idx}, but only {} layouts are configured",
-            state.config.layouts.len()
-        );
-        return;
-    }
-    log::debug!("layoutmenu: switching to layout {idx}");
-    setlayout(state, &Arg::L(Some(idx)) as *const Arg);
 }
 
 /// `"<symbol> <description>\t<index>"` per configured layout, in order,
@@ -482,12 +438,6 @@ fn layout_menu_text(layouts: &[Layout]) -> String {
             format!("{} {desc}\t{i}\n", l.symbol)
         })
         .collect()
-}
-
-/// xmenu echoes the whole selected line back, so the index is
-/// whatever's after the last tab.
-fn parse_layoutmenu_index(output: &str) -> Option<usize> {
-    output.trim().rsplit('\t').next()?.trim().parse().ok()
 }
 
 pub(crate) fn togglefloating(state: &mut State, _arg: *const Arg) {
@@ -1029,19 +979,6 @@ mod tests {
     use super::*;
     use crate::LayoutFn;
 
-    #[test]
-    fn parse_layoutmenu_index_reads_the_last_tab_separated_field() {
-        assert_eq!(parse_layoutmenu_index("[]= Tiled Layout\t0"), Some(0));
-        assert_eq!(parse_layoutmenu_index("><> NULL Layout\t13\n"), Some(13));
-    }
-
-    #[test]
-    fn parse_layoutmenu_index_rejects_garbage() {
-        assert_eq!(parse_layoutmenu_index(""), None);
-        assert_eq!(parse_layoutmenu_index("no tabs here"), None);
-        assert_eq!(parse_layoutmenu_index("label\tnot a number"), None);
-    }
-
     fn layout(symbol: &str, arrange: Option<&str>) -> Layout {
         Layout {
             symbol: symbol.to_string(),
@@ -1061,15 +998,5 @@ mod tests {
             layout_menu_text(&layouts),
             "[]= Tiled Layout\t0\n[M] Monocle Layout\t1\n><> NULL Layout\t2\n"
         );
-    }
-
-    #[test]
-    fn layout_menu_text_round_trips_through_parse_layoutmenu_index() {
-        let layouts =
-            vec![layout("[]=", Some("tile")), layout("[M]", Some("monocle"))];
-        let menu = layout_menu_text(&layouts);
-        // whichever line xmenu would echo back for the 2nd entry
-        let picked_line = menu.lines().nth(1).unwrap();
-        assert_eq!(parse_layoutmenu_index(picked_line), Some(1));
     }
 }

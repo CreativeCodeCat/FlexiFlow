@@ -732,8 +732,9 @@ flexiflow = {
         -- left click cycles forward through all of `layouts` below,
         -- matching the M-space key (instead of setlayout's upstream
         -- "toggle last two" behavior); right click pipes `layouts`
-        -- straight into xmenu (key_handlers.rs::layoutmenu) to jump
-        -- to any of them - a silent no-op if xmenu isn't installed
+        -- into xmenu (key_handlers.rs::layoutmenu) and the pick into
+        -- `FlexiFlow -l` to jump to any of them - a silent no-op if
+        -- xmenu isn't installed
         button(
             ClkLtSymbol, 0, Button1, cyclelayout, {
                 I = 1,

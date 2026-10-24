@@ -30,6 +30,8 @@ pub enum WM {
     Delete,
     State,
     TakeFocus,
+    /// `crate::SETLAYOUT_ATOM`, for `FlexiFlow -l`
+    SetLayout,
     Last,
 }
 
