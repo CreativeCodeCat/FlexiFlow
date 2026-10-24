@@ -124,7 +124,7 @@ highlights - see `src/config.lua` for the complete list:
 | Alt + `Return`/`b` | Toggle a scratchpad terminal/btop |
 | `modkey` + `Return` | Spawn a terminal |
 | `s_mod` + `r` | Quit |
-| `s_mod+Ctrl` + `r` | Restart in place (reloads the binary and config) |
+| `Alt+Ctrl` + `r` | Restart in place (reloads the binary and config) |
 
 ### Mouse bindings
 

@@ -637,7 +637,7 @@ keys = {
     -- rebuild and/or a reloaded config.lua without logging out (open
     -- windows survive - see key_handlers.rs::restart)
     key(
-        s_mod | ControlMask, XK_r, restart, {
+        altkey | ControlMask, XK_r, restart, {
             I = 0,
         }
     ),

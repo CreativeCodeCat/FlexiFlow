@@ -928,7 +928,7 @@ Config {
             ),
         },
         Key {
-            mod_: 69,
+            mod_: 12,
             keysym: 114,
             func: Some(
                 "[func]",
