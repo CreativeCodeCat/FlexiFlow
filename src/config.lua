@@ -724,7 +724,7 @@ flexiflow = {
         ),
         rule("Gimp", "", "", 1 << 3, false, false, false, -1, true),
         rule("firefox", "", "", 1 << 5, false, false, false, -1, true),
-        rule("Opera", "", "", 1 << 5, false, false, false, -1, true),
+        rule("Google-chrome", "", "", 1 << 5, false, false, false, -1, true),
         rule("Steam", "", "", 1 << 7, false, false, false, -1, true),
         rule("RuneScape", "", "", 1 << 7, false, false, false, -1, true),
         rule("discord", "", "", 1 << 8, false, false, false, -1, true),

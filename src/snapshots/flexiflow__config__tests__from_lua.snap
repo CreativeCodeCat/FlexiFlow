@@ -1557,7 +1557,7 @@ Config {
             focus: true,
         },
         Rule {
-            class: "Opera",
+            class: "Google-chrome",
             instance: "",
             title: "",
             tags: 32,
