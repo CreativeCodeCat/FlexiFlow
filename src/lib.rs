@@ -176,28 +176,43 @@ pub struct Systray {
     pub icons: *mut Client,
 }
 
-#[derive(Clone, serde::Deserialize)]
-#[serde(try_from = "String")]
-pub struct LayoutFn(pub fn(&mut State, *mut Monitor));
+/// An `arrange` function, plus the description `layoutmenu` shows next
+/// to its layout's symbol (the old scripts/layoutmenu's wording).
+#[derive(Clone)]
+pub struct LayoutFn(pub fn(&mut State, *mut Monitor), pub &'static str);
+
+/// By hand rather than `#[serde(try_from = "String")]`: the derive
+/// treats the `&'static str` field as borrowed from the input and would
+/// demand `'de: 'static` of the whole config.
+impl<'de> serde::Deserialize<'de> for LayoutFn {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        String::deserialize(d)?.try_into().map_err(serde::de::Error::custom)
+    }
+}
 
 impl TryFrom<String> for LayoutFn {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.as_str() {
-            "tile" => Ok(Self(tile)),
-            "monocle" => Ok(Self(monocle)),
-            "bstack" => Ok(Self(bstack)),
-            "bstack_horiz" => Ok(Self(bstack_horiz)),
-            "centered_master" => Ok(Self(centered_master)),
-            "centered_floating_master" => Ok(Self(centered_floating_master)),
-            "deck" => Ok(Self(deck)),
-            "spiral" => Ok(Self(spiral)),
-            "dwindle" => Ok(Self(dwindle)),
-            "gapless_grid" => Ok(Self(gapless_grid)),
-            "grid" => Ok(Self(grid)),
-            "horiz_grid" => Ok(Self(horiz_grid)),
-            "nrow_grid" => Ok(Self(nrow_grid)),
+            "tile" => Ok(Self(tile, "Tiled Layout")),
+            "monocle" => Ok(Self(monocle, "Monocle Layout")),
+            "bstack" => Ok(Self(bstack, "Stack Layout")),
+            "bstack_horiz" => Ok(Self(bstack_horiz, "Stack Horz Layout")),
+            "centered_master" => {
+                Ok(Self(centered_master, "Centered Master Layout"))
+            }
+            "centered_floating_master" => Ok(Self(
+                centered_floating_master,
+                "Centered Floating Layout",
+            )),
+            "deck" => Ok(Self(deck, "Deck Layout")),
+            "spiral" => Ok(Self(spiral, "Spiral Layout")),
+            "dwindle" => Ok(Self(dwindle, "Dwindle Layout")),
+            "gapless_grid" => Ok(Self(gapless_grid, "Gapless Grid Layout")),
+            "grid" => Ok(Self(grid, "Grid Layout")),
+            "horiz_grid" => Ok(Self(horiz_grid, "Grid Horz Layout")),
+            "nrow_grid" => Ok(Self(nrow_grid, "Narrow Grid Layout")),
             s => Err(format!("unknown layout `{s}`")),
         }
     }
