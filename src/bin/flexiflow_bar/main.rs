@@ -1,14 +1,29 @@
-//! flexiflow_bar: feeds FlexiFlow's status bar via `FlexiFlow`'s root-window
-//! `WM_NAME` property (what `-s`/`XStoreName` sets), using the same inline
+//! flexiflow_bar: feeds FlexiFlow's status bar by running `FlexiFlow -b`
+//! with the rendered text every tick, using the same inline
 //! `^c#hex^`/`^b#hex^`/`^d^` color codes `core.rs`'s `drawbar` parses.
-//! Talks to X directly instead of spawning `FlexiFlow -s` every tick.
 
 mod config;
 mod segments;
 
-use std::{ffi::CString, fs, time::Duration};
+use std::{fs, process::Command, time::Duration};
 
 use flexiflow::util::die;
+
+/// Hand `text` to `FlexiFlow -b`, so how the status gets stored lives in
+/// one place. Any failure is fatal, same as losing the X connection was
+/// back when this talked to X itself: a missing `FlexiFlow` or a dead
+/// display won't fix itself on the next tick.
+fn set_status(text: &str) {
+    match Command::new("FlexiFlow").args(["-b", text]).status() {
+        Ok(status) if status.success() => {}
+        Ok(status) => {
+            die(&format!("flexiflow_bar: `FlexiFlow -b` failed ({status})"))
+        }
+        Err(e) => {
+            die(&format!("flexiflow_bar: cannot run `FlexiFlow -b`: {e}"))
+        }
+    }
+}
 
 fn render_chip(fg: &str, accent: &(String, String), icon: &str, label: &str) -> String {
     let (bg, bright) = accent;
@@ -50,12 +65,6 @@ fn main() {
 
     let cfg = config::load();
 
-    let dpy = unsafe { x11::xlib::XOpenDisplay(std::ptr::null_mut()) };
-    if dpy.is_null() {
-        die("flexiflow_bar: cannot open display");
-    }
-    let root = unsafe { x11::xlib::XDefaultRootWindow(dpy) };
-
     let no_accent = (cfg.colors.fg.clone(), cfg.colors.fg.clone());
     let sep = format!("^c{}^^b{}^ ", cfg.colors.sep_fg, cfg.colors.sep_bg);
 
@@ -77,12 +86,7 @@ fn main() {
             }
         }
 
-        if let Ok(c_text) = CString::new(chips.join(&sep)) {
-            unsafe {
-                x11::xlib::XStoreName(dpy, root, c_text.as_ptr());
-                x11::xlib::XFlush(dpy);
-            }
-        }
+        set_status(&chips.join(&sep));
 
         std::thread::sleep(Duration::from_millis(cfg.interval_ms));
     }

@@ -18,11 +18,11 @@ mod tests;
 /// manager's name.
 const WM_NAME: &str = "FlexiFlow";
 
-/// `FlexiFlow -s TEXT`: like dwm's `xsetroot -name`, just stores
+/// `FlexiFlow -b TEXT`: like dwm's `xsetroot -name`, just stores
 /// `TEXT` as the root window's `WM_NAME` and exits - this is how the
 /// already-running instance picks up new status bar text, including the
 /// inline color codes `core.rs`'s `drawbar` parses out of it.
-/// `flexiflow_bar` calls this once a second.
+/// `flexiflow_bar` runs this every tick.
 fn set_status_text(text: &str) {
     unsafe {
         let dpy = x11::xlib::XOpenDisplay(std::ptr::null_mut());
@@ -38,7 +38,7 @@ fn set_status_text(text: &str) {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() >= 2 && args[1] == "-s" {
+    if args.len() >= 2 && args[1] == "-b" {
         set_status_text(args.get(2).map(String::as_str).unwrap_or(""));
         return;
     }
