@@ -29,9 +29,10 @@ use x11::xlib::{
     EnterWindowMask, ExposureMask, False, FocusChangeMask, GrabModeAsync,
     GrabModeSync, InputHint, IsViewable, LeaveWindowMask, LockMask, Mod1Mask,
     Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask, NoEventMask, PAspect, PBaseSize,
-    PMaxSize, PMinSize, PResizeInc, PSize, ParentRelative, PointerMotionMask,
+    PMaxSize, PMinSize, PPosition, PResizeInc, PSize, ParentRelative,
+    PointerMotionMask,
     PointerRoot, PropModeAppend, PropModeReplace, PropertyChangeMask,
-    RevertToPointerRoot, ShiftMask, StructureNotifyMask,
+    RevertToPointerRoot, ShiftMask, StructureNotifyMask, USPosition,
     SubstructureNotifyMask, SubstructureRedirectMask, Success, True, XA_ATOM,
     XA_CARDINAL, XA_STRING, XA_WINDOW, XA_WM_NAME, XChangeProperty,
     XChangeWindowAttributes, XConfigureWindow, XCreateSimpleWindow,
@@ -917,6 +918,18 @@ pub fn applysizehints(
             }
         }
         *x != (*c).x || *y != (*c).y || *w != (*c).w || *h != (*c).h
+    }
+}
+
+/// Whether `w`'s size hints set a position for it, either one the user
+/// asked for (USPosition, e.g. `-geometry +X+Y`) or one the program chose
+/// (PPosition).
+fn asks_for_position(state: &State, w: Window) -> bool {
+    unsafe {
+        let mut size: xlib::XSizeHints = std::mem::zeroed();
+        let mut supplied = 0;
+        xlib::XGetWMNormalHints(state.dpy, w, &mut size, &mut supplied) != 0
+            && size.flags & (USPosition | PPosition) != 0
     }
 }
 
@@ -2789,6 +2802,14 @@ pub fn manage(state: &mut State, w: Window, wa: *mut xlib::XWindowAttributes) {
         if !(*c).isfloating {
             (*c).oldstate = trans != 0 || (*c).isfixed;
             (*c).isfloating = (*c).oldstate;
+        }
+        // a floating window that didn't pick a position of its own opens
+        // centred on its monitor instead of in the top-left corner
+        if (*c).isfloating && !(*c).isfullscreen && !asks_for_position(state, w)
+        {
+            let m = (*c).mon;
+            (*c).x = (*m).wx + ((*m).ww - width(c)) / 2;
+            (*c).y = (*m).wy + ((*m).wh - height(c)) / 2;
         }
         if (*c).isfloating {
             xlib::XRaiseWindow(state.dpy, (*c).win);
