@@ -75,12 +75,12 @@ fn main() {
     let no_accent = (cfg.colors.fg.clone(), cfg.colors.fg.clone());
     let sep = format!("^c{}^^b{}^ ", cfg.colors.sep_fg, cfg.colors.sep_bg);
 
-    let mut cpu_state = segments::CpuState::default();
+    let mut seg_state = segments::State::default();
 
     loop {
         let mut chips = Vec::new();
         for (i, name) in cfg.segments.iter().enumerate() {
-            let Some(pairs) = segments::render(name, &mut cpu_state) else {
+            let Some(pairs) = segments::render(name, &mut seg_state) else {
                 continue;
             };
             let accent = if cfg.colors.accents.is_empty() {

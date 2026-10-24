@@ -12,28 +12,47 @@ use std::{
     fs,
     path::Path,
     process::Command,
-    time::{SystemTime, UNIX_EPOCH},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::{Duration, Instant, SystemTime},
 };
 
+/// What the segments carry from one tick to the next.
 #[derive(Default)]
-pub struct CpuState {
+pub struct State {
+    cpu: CpuState,
+    updates: UpdatesState,
+}
+
+#[derive(Default)]
+struct CpuState {
     prev_total: u64,
     prev_idle: u64,
+}
+
+#[derive(Default)]
+struct UpdatesState {
+    /// Latest `paru -Qu` count, `None` until the first check finishes.
+    count: Arc<Mutex<Option<usize>>>,
+    /// Set while a check is running on its background thread.
+    checking: Arc<AtomicBool>,
+    /// `pacman_db_stamp` as of the start of the latest check.
+    checked_stamp: Option<SystemTime>,
+    checked_at: Option<Instant>,
 }
 
 /// Dispatch by config-file segment name to the matching `seg_*`
 /// function below, returning the chip(s) to render with the caller's
 /// chosen accent color.
-pub fn render(
-    name: &str,
-    cpu_state: &mut CpuState,
-) -> Option<Vec<(String, String)>> {
+pub fn render(name: &str, state: &mut State) -> Option<Vec<(String, String)>> {
     match name {
-        "updates" => updates().map(|p| vec![p]),
+        "updates" => updates(&mut state.updates).map(|p| vec![p]),
         "kernel" => kernel().map(|p| vec![p]),
         "battery" => battery().map(|p| vec![p]),
         "ram" => ram().map(|p| vec![p]),
-        "cpu" => cpu(cpu_state).map(|p| vec![p]),
+        "cpu" => cpu(&mut state.cpu).map(|p| vec![p]),
         "keyboard" => keyboard().map(|p| vec![p]),
         "desktop" => desktop().map(|p| vec![p]),
         "network" => network().map(|p| vec![p]),
@@ -59,52 +78,79 @@ fn run(cmd: &str, args: &[&str]) -> Option<String> {
         .then(|| String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
 
-fn updates() -> Option<(String, String)> {
+/// How long a count stays trusted while pacman's databases haven't
+/// changed. Only AUR releases can show up without touching them, and
+/// every check costs an AUR RPC request (rate-limited per IP), so this
+/// is the one part that still has to poll.
+const AUR_RECHECK: Duration = Duration::from_secs(15 * 60);
+
+const PACMAN_DB: &str = "/var/lib/pacman";
+
+/// Re-runs `paru -Qu` whenever pacman's databases change - so installing
+/// updates or syncing (`-Sy`) shows up on the very next tick - and every
+/// `AUR_RECHECK` otherwise. The check runs on a background thread, so a
+/// slow AUR request never stalls the bar; until the first one finishes
+/// the label is "..".
+fn updates(state: &mut UpdatesState) -> Option<(String, String)> {
     if !command_exists("paru") {
         return None;
     }
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs();
-    let cache_file = crate::config::cache_dir()?.join("bar_updates.ini");
-
-    let cached = fs::read_to_string(&cache_file)
-        .ok()
-        .and_then(|s| parse_updates_cache(&s));
-
-    let label = match cached {
-        Some((last_used, message)) if now < last_used => message,
-        _ => {
+    let stamp = pacman_db_stamp(Path::new(PACMAN_DB));
+    if needs_check(state.checked_stamp, stamp, state.checked_at)
+        && !state.checking.swap(true, Ordering::AcqRel)
+    {
+        state.checked_stamp = stamp;
+        state.checked_at = Some(Instant::now());
+        let count = Arc::clone(&state.count);
+        let checking = Arc::clone(&state.checking);
+        std::thread::spawn(move || {
+            // `paru -Qu` exits non-zero when there's nothing to update
             let n = run("paru", &["-Qu"])
                 .map(|s| s.lines().filter(|l| !l.is_empty()).count())
                 .unwrap_or(0);
-            let message = match n {
-                0 => "Fully Updated".to_string(),
-                1 => "1 Update".to_string(),
-                n => format!("{n} Updates"),
-            };
-            if let Some(dir) = cache_file.parent() {
-                let _ = fs::create_dir_all(dir);
-            }
-            let _ = fs::write(
-                &cache_file,
-                format!("LastUsed={}\nMessage=\"{message}\"\n", now + 900),
-            );
-            message
-        }
-    };
+            *count.lock().unwrap() = Some(n);
+            checking.store(false, Ordering::Release);
+        });
+    }
+    let label = updates_label(*state.count.lock().unwrap());
     Some(("\u{F019}".to_string(), label))
 }
 
-fn parse_updates_cache(s: &str) -> Option<(u64, String)> {
-    let mut last_used = None;
-    let mut message = None;
-    for line in s.lines() {
-        if let Some(v) = line.strip_prefix("LastUsed=") {
-            last_used = v.trim().parse().ok();
-        } else if let Some(v) = line.strip_prefix("Message=") {
-            message = Some(v.trim().trim_matches('"').to_string());
-        }
+/// A check is due if pacman's databases changed since the last one
+/// started (a change mid-check is caught on the first tick after it),
+/// or the AUR side has gone `AUR_RECHECK` without one.
+fn needs_check(
+    checked_stamp: Option<SystemTime>,
+    stamp: Option<SystemTime>,
+    checked_at: Option<Instant>,
+) -> bool {
+    checked_stamp != stamp
+        || checked_at.is_none_or(|t| t.elapsed() >= AUR_RECHECK)
+}
+
+/// Newest mtime across pacman's local and sync databases: the local
+/// one changes whenever a package is installed, upgraded or removed,
+/// and the sync ones whenever they're refreshed - every way the repo
+/// update count can change. A handful of stat()s, cheap every tick.
+fn pacman_db_stamp(db: &Path) -> Option<SystemTime> {
+    let sync = db.join("sync");
+    let mut paths = vec![db.join("local"), sync.clone()];
+    if let Ok(entries) = fs::read_dir(&sync) {
+        paths.extend(entries.flatten().map(|e| e.path()));
     }
-    Some((last_used?, message?))
+    paths
+        .iter()
+        .filter_map(|p| fs::metadata(p).and_then(|m| m.modified()).ok())
+        .max()
+}
+
+fn updates_label(count: Option<usize>) -> String {
+    match count {
+        None => "..".to_string(),
+        Some(0) => "Fully Updated".to_string(),
+        Some(1) => "1 Update".to_string(),
+        Some(n) => format!("{n} Updates"),
+    }
 }
 
 fn kernel() -> Option<(String, String)> {
@@ -347,17 +393,62 @@ mod tests {
     }
 
     #[test]
-    fn updates_cache_parses_lastused_and_quoted_message() {
-        let s = "LastUsed=12345\nMessage=\"3 Updates\"\n";
-        assert_eq!(
-            parse_updates_cache(s),
-            Some((12345, "3 Updates".to_string()))
-        );
+    fn updates_label_is_dots_until_the_first_check_finishes() {
+        assert_eq!(updates_label(None), "..");
+        assert_eq!(updates_label(Some(0)), "Fully Updated");
+        assert_eq!(updates_label(Some(1)), "1 Update");
+        assert_eq!(updates_label(Some(3)), "3 Updates");
     }
 
     #[test]
-    fn updates_cache_rejects_incomplete_files() {
-        assert_eq!(parse_updates_cache("LastUsed=12345\n"), None);
-        assert_eq!(parse_updates_cache(""), None);
+    fn needs_check_on_first_tick_and_whenever_the_db_changes() {
+        let t0 = SystemTime::UNIX_EPOCH + Duration::from_secs(1000);
+        let t1 = t0 + Duration::from_secs(1);
+        let now = Some(Instant::now());
+
+        assert!(needs_check(None, Some(t0), None));
+        assert!(!needs_check(Some(t0), Some(t0), now));
+        assert!(needs_check(Some(t0), Some(t1), now));
+    }
+
+    #[test]
+    fn needs_check_once_the_aur_recheck_interval_passes() {
+        let t0 = SystemTime::UNIX_EPOCH + Duration::from_secs(1000);
+        let Some(long_ago) =
+            Instant::now().checked_sub(AUR_RECHECK + Duration::from_secs(1))
+        else {
+            return; // monotonic clock started too recently to go back
+        };
+        assert!(needs_check(Some(t0), Some(t0), Some(long_ago)));
+    }
+
+    #[test]
+    fn pacman_db_stamp_tracks_the_newest_local_or_sync_change() {
+        let db = std::env::temp_dir()
+            .join(format!("flexiflow-bar-db-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&db);
+        fs::create_dir_all(db.join("local")).unwrap();
+        fs::create_dir_all(db.join("sync")).unwrap();
+        let at = |secs| SystemTime::UNIX_EPOCH + Duration::from_secs(secs);
+        let set = |p: &Path, t| {
+            fs::File::open(p).unwrap().set_modified(t).unwrap();
+        };
+
+        let core = db.join("sync").join("core.db");
+        fs::write(&core, "").unwrap();
+        set(&db.join("local"), at(100));
+        set(&db.join("sync"), at(100));
+        set(&core, at(100));
+        assert_eq!(pacman_db_stamp(&db), Some(at(100)));
+
+        // `pacman -Sy` rewriting a sync db
+        set(&core, at(200));
+        assert_eq!(pacman_db_stamp(&db), Some(at(200)));
+
+        // installing/upgrading/removing a package
+        set(&db.join("local"), at(300));
+        assert_eq!(pacman_db_stamp(&db), Some(at(300)));
+
+        let _ = fs::remove_dir_all(&db);
     }
 }

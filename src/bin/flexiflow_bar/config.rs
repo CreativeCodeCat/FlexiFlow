@@ -35,12 +35,6 @@ fn config_dir() -> Option<PathBuf> {
     }
 }
 
-/// `~/.config/flexiflow/flexiflow_bar/`: where the updates-segment
-/// caches its 15-minute-TTL `paru -Qu` count between ticks.
-pub fn cache_dir() -> Option<PathBuf> {
-    config_dir().map(|d| d.join("flexiflow_bar"))
-}
-
 /// Load the baked-in default config, then layer
 /// `$XDG_CONFIG_HOME/flexiflow/bar.lua` over it if present - same
 /// "quiet if simply absent, loud if present-but-broken" behavior as
