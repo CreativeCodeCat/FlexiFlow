@@ -415,31 +415,56 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
 /// dwm's own popen()-based `layoutmenu()` - there's no async IPC
 /// here, so this mirrors that rather than inventing some.
 pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
-    let Ok(mut child) = Command::new("xmenu")
+    let mut child = match Command::new("xmenu")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()
-    else {
-        return; // xmenu isn't installed - do nothing
+    {
+        Ok(child) => child,
+        Err(e) => {
+            log::debug!("layoutmenu: couldn't spawn xmenu ({e}) - not installed?");
+            return;
+        }
     };
 
     let menu = layout_menu_text(&state.config.layouts);
-    if let Some(mut stdin) = child.stdin.take() {
-        let _ = stdin.write_all(menu.as_bytes());
+    if let Some(mut stdin) = child.stdin.take()
+        && let Err(e) = stdin.write_all(menu.as_bytes())
+    {
+        log::warn!("layoutmenu: failed writing to xmenu's stdin: {e}");
     }
 
-    let Ok(out) = child.wait_with_output() else { return };
+    let out = match child.wait_with_output() {
+        Ok(out) => out,
+        Err(e) => {
+            log::warn!("layoutmenu: failed waiting on xmenu: {e}");
+            return;
+        }
+    };
     if !out.status.success() {
+        // normal: the user pressed Esc or clicked outside the menu
+        log::debug!(
+            "layoutmenu: xmenu exited with {:?}, stderr: {:?}",
+            out.status,
+            String::from_utf8_lossy(&out.stderr)
+        );
         return;
     }
-    let Some(idx) = parse_layoutmenu_index(&String::from_utf8_lossy(&out.stdout))
-    else {
+
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let Some(idx) = parse_layoutmenu_index(&stdout) else {
+        log::warn!("layoutmenu: couldn't parse an index out of xmenu's output: {stdout:?}");
         return;
     };
     if idx >= state.config.layouts.len() {
+        log::warn!(
+            "layoutmenu: xmenu picked index {idx}, but only {} layouts are configured",
+            state.config.layouts.len()
+        );
         return;
     }
+    log::debug!("layoutmenu: switching to layout {idx}");
     setlayout(state, &Arg::L(Some(idx)) as *const Arg);
 }
 
