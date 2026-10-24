@@ -1622,6 +1622,22 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         ) as i32;
         log::trace!("finished drawbar text 3");
 
+        // the power button, in the same scheme as the layout symbol
+        if !state.config.powermenu.symbol.is_empty() {
+            let symbol = &state.config.powermenu.symbol;
+            let w = textw(&mut state.drw, symbol, state.lrpad);
+            x = drw::text(
+                &mut state.drw,
+                x,
+                0,
+                w as u32,
+                state.bh as u32,
+                state.lrpad as u32 / 2,
+                symbol,
+                0,
+            ) as i32;
+        }
+
         let w = (*m).ww - tw - stw as i32 - x;
         if w > state.bh {
             if !(*m).sel.is_null() {

@@ -741,6 +741,9 @@ flexiflow = {
             }
         ),
         button(ClkLtSymbol, 0, Button3, layoutmenu),
+        -- the power button next to the layout symbol opens `powermenu`
+        -- (below) in xmenu
+        button(ClkPowerButton, 0, Button1, powermenu),
         button(
             ClkWinTitle, 0, Button2, zoom, {
                 I = 0,
@@ -848,6 +851,29 @@ flexiflow = {
         },
     },
     scratchpads = scratchpads,
+
+    -- the bar's power button (drawn right after the layout symbol; leave
+    -- `symbol` empty for no button) and the xmenu it opens: picking an
+    -- item runs its `command` through `sh -c`. Labels are plain text on
+    -- purpose: an xmenu whose font lacks a glyph can crash on exit
+    -- trying a fallback font, and then the command never runs
+    powermenu = {
+        symbol = "\u{F011}",
+        items = {
+            {
+                label = "Logout",
+                command = 'loginctl terminate-session "$XDG_SESSION_ID"',
+            },
+            {
+                label = "Restart",
+                command = "systemctl reboot",
+            },
+            {
+                label = "Shutdown",
+                command = "systemctl poweroff",
+            },
+        },
+    },
 
     -- Subset of flexiflow's old `autostart[]` worth spawning unconditionally;
     -- anything here that isn't installed just fails silently (same as dwm's

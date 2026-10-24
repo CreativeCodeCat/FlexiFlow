@@ -21,6 +21,8 @@ pub enum Clk {
     WinTitle,
     ClientWin,
     RootWin,
+    /// `Config::powermenu`'s symbol, right after the layout symbol
+    PowerButton,
     Last,
 }
 

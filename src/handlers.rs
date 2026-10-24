@@ -67,17 +67,26 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                     break;
                 }
             }
+            let ltw =
+                textw(&mut state.drw, &(*state.selmon).ltsymbol, state.lrpad);
+            // the power button sits right after the layout symbol, and
+            // isn't drawn at all without a symbol (see drawbar)
+            let powerw = if state.config.powermenu.symbol.is_empty() {
+                0
+            } else {
+                textw(
+                    &mut state.drw,
+                    &state.config.powermenu.symbol,
+                    state.lrpad,
+                )
+            };
             if i < state.config.tags.len() {
                 click = Clk::TagBar;
                 arg = Arg::Ui(1 << i);
-            } else if ev.x
-                < x + textw(
-                    &mut state.drw,
-                    &(*state.selmon).ltsymbol,
-                    state.lrpad,
-                )
-            {
+            } else if ev.x < x + ltw {
                 click = Clk::LtSymbol;
+            } else if ev.x < x + ltw + powerw {
+                click = Clk::PowerButton;
             } else if ev.x
                 > (*state.selmon).ww
                     - (status_textw(state) + state.lrpad)

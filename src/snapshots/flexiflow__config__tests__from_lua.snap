@@ -1619,6 +1619,19 @@ Config {
             ),
         },
         Button {
+            click: 6,
+            mask: 0,
+            button: 1,
+            func: ButtonFn(
+                Some(
+                    "[func]",
+                ),
+            ),
+            arg: L(
+                None,
+            ),
+        },
+        Button {
             click: 3,
             mask: 0,
             button: 2,
@@ -1901,4 +1914,21 @@ Config {
             "flexiflow_bar",
         ],
     ],
+    powermenu: PowerMenu {
+        symbol: "\u{f011}",
+        items: [
+            PowerMenuItem {
+                label: "Logout",
+                command: "loginctl terminate-session \"$XDG_SESSION_ID\"",
+            },
+            PowerMenuItem {
+                label: "Restart",
+                command: "systemctl reboot",
+            },
+            PowerMenuItem {
+                label: "Shutdown",
+                command: "systemctl poweroff",
+            },
+        ],
+    },
 }

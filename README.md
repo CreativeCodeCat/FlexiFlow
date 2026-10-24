@@ -134,6 +134,7 @@ highlights - see `src/config.lua` for the complete list:
 | `modkey` + left/right-click a tag in the bar | Move/toggle window to that tag |
 | Left-click the layout symbol | Cycle to the next layout |
 | Right-click the layout symbol | Open an `xmenu` picker to jump to any layout via `FlexiFlow -l` (no-op if `xmenu` isn't installed) |
+| Click the power button (next to the layout symbol) | Open an `xmenu` of `powermenu` entries: logout, restart, shutdown by default |
 | Middle-click a window's title | Zoom it into the master area |
 | `modkey` + drag a window | Move it |
 | `modkey` + middle-click a window | Toggle floating |

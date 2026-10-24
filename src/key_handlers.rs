@@ -20,7 +20,7 @@ use crate::core::{
 };
 use crate::enums::WM;
 use crate::util::{restart_exe, spawn_child};
-use crate::{Arg, Client, Gaps, Layout, Monitor};
+use crate::{Arg, Client, Gaps, Layout, Monitor, PowerMenuItem};
 use crate::{State, cfor};
 
 pub(crate) fn togglebar(state: &mut State, _arg: *const Arg) {
@@ -423,6 +423,29 @@ pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
     {
         log::warn!("layoutmenu: failed to spawn sh: {e}");
     }
+}
+
+/// Pipes `state.config.powermenu.items` into `xmenu` (`"<label>\t
+/// <command>"` per line, so xmenu prints the picked item's command) and
+/// runs the pick through `sh -c`. The same background pipeline as
+/// `layoutmenu`, so the event loop keeps going while the menu is open,
+/// and Esc, a click outside the menu, or a missing `xmenu` runs nothing.
+pub(crate) fn powermenu(state: &mut State, _arg: *const Arg) {
+    // the menu text goes in as $1, never spliced into the script
+    const SCRIPT: &str = r#"cmd=$(printf '%s' "$1" | xmenu) && [ -n "$cmd" ] && exec sh -c "$cmd""#;
+    let menu = power_menu_text(&state.config.powermenu.items);
+    if let Err(e) =
+        spawn_child(Command::new("sh").args(["-c", SCRIPT, "sh", &menu]))
+    {
+        log::warn!("powermenu: failed to spawn sh: {e}");
+    }
+}
+
+fn power_menu_text(items: &[PowerMenuItem]) -> String {
+    items
+        .iter()
+        .map(|item| format!("{}\t{}\n", item.label, item.command))
+        .collect()
 }
 
 /// `"<symbol> <description>\t<index>"` per configured layout, in order,
@@ -1003,6 +1026,23 @@ mod tests {
         assert_eq!(
             layout_menu_text(&layouts),
             "[]= Tiled Layout\t0\n[M] Monocle Layout\t1\n><> NULL Layout\t2\n"
+        );
+    }
+
+    #[test]
+    fn power_menu_text_pairs_each_label_with_its_command() {
+        let item = |label: &str, command: &str| PowerMenuItem {
+            label: label.to_string(),
+            command: command.to_string(),
+        };
+        let items = vec![
+            item("Logout", "loginctl terminate-session \"$XDG_SESSION_ID\""),
+            item("Shutdown", "systemctl poweroff"),
+        ];
+        assert_eq!(
+            power_menu_text(&items),
+            "Logout\tloginctl terminate-session \"$XDG_SESSION_ID\"\n\
+             Shutdown\tsystemctl poweroff\n"
         );
     }
 }

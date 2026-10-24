@@ -176,6 +176,25 @@ pub struct ScratchSpec {
     pub cmd: Vec<String>,
 }
 
+/// The bar's power button: `symbol` is drawn right after the layout
+/// symbol (nothing at all if it's empty), and clicking it - see the
+/// `powermenu` handler - opens an xmenu of `items`.
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+pub struct PowerMenu {
+    #[serde(default)]
+    pub symbol: String,
+    #[serde(default)]
+    pub items: Vec<PowerMenuItem>,
+}
+
+/// One `PowerMenu` entry: xmenu shows `label`, and picking it runs
+/// `command` through `sh -c`.
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct PowerMenuItem {
+    pub label: String,
+    pub command: String,
+}
+
 pub struct Systray {
     pub win: Window,
     pub icons: *mut Client,

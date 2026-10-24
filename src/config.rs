@@ -10,7 +10,8 @@ use env::{CLICKS, HANDLERS, KEYS, XKEYS};
 use mlua::{Lua, LuaSerdeExt as _, Table};
 
 use crate::{
-    Button, Layout, Rule, ScratchSpec, config::key::Key, enums::Scheme,
+    Button, Layout, PowerMenu, Rule, ScratchSpec, config::key::Key,
+    enums::Scheme,
 };
 
 mod env;
@@ -169,6 +170,11 @@ pub struct Config {
     /// Commands (argv lists) to spawn once on startup.
     #[serde(default)]
     pub autostart: Vec<Vec<String>>,
+
+    /// The bar's power button and its menu - see `PowerMenu`. Optional:
+    /// without one, there's no button.
+    #[serde(default)]
+    pub powermenu: PowerMenu,
 }
 
 fn default_gaps() -> c_int {
