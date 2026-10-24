@@ -61,6 +61,13 @@ fn main() {
     // so real problems are visible without needing RUST_LOG set
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn"))
         .init();
+    // whatever launched us may have left SIGCHLD ignored (FlexiFlow's
+    // own autostart used to), which makes the kernel reap every child
+    // itself - `FlexiFlow -b` and the segments' commands included - so
+    // waiting on any of them fails with ECHILD
+    unsafe {
+        libc::signal(libc::SIGCHLD, libc::SIG_DFL);
+    }
     kill_other_instances();
 
     let cfg = config::load();

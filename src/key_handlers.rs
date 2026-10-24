@@ -1,7 +1,6 @@
 use std::cmp::max;
 use std::ffi::c_int;
 use std::io::{Read as _, Write as _};
-use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::ptr::null_mut;
 
@@ -21,6 +20,7 @@ use crate::core::{
     unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::enums::WM;
+use crate::util::spawn_child;
 use crate::{Arg, Client, Gaps, Layout, Monitor};
 use crate::{State, cfor};
 
@@ -416,11 +416,11 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
 /// dwm's own popen()-based `layoutmenu()` - there's no async IPC
 /// here, so this mirrors that rather than inventing some.
 pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
-    let mut child = match Command::new("xmenu")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-    {
+    let mut child = match spawn_child(
+        Command::new("xmenu")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped()),
+    ) {
         Ok(child) => child,
         Err(e) => {
             log::debug!("layoutmenu: couldn't spawn xmenu ({e}) - not installed?");
@@ -938,18 +938,10 @@ pub(crate) fn spawn(state: &mut State, arg: *const Arg) {
         let mut cmd = Command::new(argv[0].clone());
         let cmd = if argv.len() > 1 { cmd.args(&argv[1..]) } else { &mut cmd };
 
-        cmd.pre_exec(|| {
-            let mut sa: libc::sigaction = std::mem::zeroed();
-            libc::sigemptyset(&mut sa.sa_mask);
-            sa.sa_flags = 0;
-            sa.sa_sigaction = libc::SIG_DFL;
-            libc::sigaction(libc::SIGCHLD, &sa, std::ptr::null_mut());
-            Ok(())
-        });
-
-        let Ok(_) = cmd.spawn() else {
-            panic!("FlexiFlow: spawn '{:?}' failed", argv[0]);
-        };
+        // a binding to a missing program shouldn't take the WM down with it
+        if let Err(e) = spawn_child(cmd) {
+            log::warn!("spawn: failed to spawn {:?}: {e}", argv[0]);
+        }
     }
 }
 
