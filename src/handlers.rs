@@ -26,8 +26,8 @@ use crate::{
     enums::{Clk, Net},
     focus, getsystraywidth, grabkeys, height, is_visible, manage, recttomon,
     removesystrayicon, resizebarwin, resizeclient, restack, sendevent,
-    setclientstate, setfocus, setfullscreen, seturgent, swallowingclient,
-    textw, unfocus, unmanage, updatebars, updategeom, updatesizehints,
+    setclientstate, setfocus, setfullscreen, seturgent, status_textw,
+    swallowingclient, textw, unfocus, unmanage, updatebars, updategeom, updatesizehints,
     updatestatus, updatesystray, updatesystrayicongeom, updatesystrayiconstate,
     updatetitle, updatewindowtype, updatewmhints, width, wintoclient, wintomon,
     wintosystrayicon,
@@ -78,7 +78,7 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                 click = Clk::LtSymbol;
             } else if ev.x
                 > (*state.selmon).ww
-                    - textw(&mut state.drw, &state.stext, state.lrpad)
+                    - (status_textw(state) + state.lrpad)
                     - getsystraywidth(state) as i32
             {
                 click = Clk::StatusText;

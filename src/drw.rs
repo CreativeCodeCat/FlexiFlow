@@ -223,20 +223,26 @@ fn clr_create(drw: &Drw, dest: *mut Clr, clrname: *const c_char) {
     if dest.is_null() || clrname.is_null() {
         return;
     }
+    match clr_try_create(drw, clrname) {
+        Some(clr) => unsafe { dest.write(clr) },
+        None => die(&format!("error, cannot allocate color '{:?}'", unsafe {
+            CStr::from_ptr(clrname)
+        })),
+    }
+}
+
+/// `None` if `clrname` isn't a color X can parse/allocate.
+fn clr_try_create(drw: &Drw, clrname: *const c_char) -> Option<Clr> {
+    let mut dest = MaybeUninit::uninit();
     unsafe {
-        if xft::XftColorAllocName(
+        (xft::XftColorAllocName(
             drw.dpy,
             xlib::XDefaultVisual(drw.dpy, drw.screen),
             xlib::XDefaultColormap(drw.dpy, drw.screen),
             clrname,
-            dest,
-        ) == 0
-        {
-            die(&format!(
-                "error, cannot allocate color '{:?}'",
-                CStr::from_ptr(clrname)
-            ));
-        }
+            dest.as_mut_ptr(),
+        ) != 0)
+            .then(|| dest.assume_init())
     }
 }
 
@@ -257,6 +263,14 @@ pub fn scm_create(
         }
     }
     ret
+}
+
+/// Like `scm_create`, but `None` instead of `die`ing on a color that
+/// doesn't parse - for colors that come from outside the config (the
+/// status text's `^c`/`^b` codes), where a typo in some other program's
+/// output shouldn't take the whole window manager down with it.
+pub fn scm_try_create(drw: &Drw, clrnames: &[CString]) -> Option<Vec<Clr>> {
+    clrnames.iter().map(|clr| clr_try_create(drw, clr.as_ptr())).collect()
 }
 
 /// # Safety
