@@ -25,12 +25,14 @@ fn set_status(text: &str) {
     }
 }
 
+/// A chip starts straight with its own colors, so chips sit flush
+/// against each other with no bar background showing between them.
 fn render_chip(fg: &str, accent: &(String, String), icon: &str, label: &str) -> String {
     let (bg, bright) = accent;
     if icon.is_empty() {
-        format!(" ^c{fg}^^b{bright}^ {label} ")
+        format!("^c{fg}^^b{bright}^ {label} ")
     } else {
-        format!(" ^c{fg}^^b{bg}^ {icon} ^c{fg}^^b{bright}^ {label} ")
+        format!("^c{fg}^^b{bg}^ {icon} ^c{fg}^^b{bright}^ {label} ")
     }
 }
 
@@ -73,7 +75,6 @@ fn main() {
     let cfg = config::load();
 
     let no_accent = (cfg.colors.fg.clone(), cfg.colors.fg.clone());
-    let sep = format!("^c{}^^b{}^ ", cfg.colors.sep_fg, cfg.colors.sep_bg);
 
     let mut seg_state = segments::State::default();
 
@@ -93,8 +94,26 @@ fn main() {
             }
         }
 
-        set_status(&chips.join(&sep));
+        set_status(&chips.concat());
 
         std::thread::sleep(Duration::from_millis(cfg.interval_ms));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chips_start_with_their_own_colors_so_they_sit_flush() {
+        let accent = ("#A165E8".to_string(), "#C9A4FF".to_string());
+        assert_eq!(
+            render_chip("#283036", &accent, "", "6.17"),
+            "^c#283036^^b#C9A4FF^ 6.17 "
+        );
+        assert_eq!(
+            render_chip("#283036", &accent, "V", "50%"),
+            "^c#283036^^b#A165E8^ V ^c#283036^^b#C9A4FF^ 50% "
+        );
     }
 }

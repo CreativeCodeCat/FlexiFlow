@@ -5,8 +5,6 @@ use mlua::LuaSerdeExt as _;
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct Colors {
     pub fg: String,
-    pub sep_fg: String,
-    pub sep_bg: String,
     pub accents: Vec<(String, String)>,
 }
 

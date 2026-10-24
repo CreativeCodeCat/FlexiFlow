@@ -11,8 +11,6 @@ return {
     interval_ms = 500,
     colors = {
         fg = "#283036",
-        sep_fg = "#434C5E",
-        sep_bg = "#283036",
         accents = {
             {
                 "#A165E8",

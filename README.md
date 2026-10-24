@@ -83,16 +83,14 @@ on every restart, see below).
 `flexiflow_bar` has its own, separate config the same way: defaults
 compiled in from `src/bin/flexiflow_bar/bar.lua`, overridable at
 `~/.config/flexiflow/bar.lua`. It controls the update interval, the
-foreground/separator colors, the cyclic accent-color palette segments
-are colored from, and which segments to show and in what order:
+foreground color, the cyclic accent-color palette segments are colored
+from, and which segments to show and in what order:
 
 ```lua
 return {
     interval_ms = 500,
     colors = {
         fg = "#283036",
-        sep_fg = "#434C5E",
-        sep_bg = "#283036",
         accents = { { "#A165E8", "#C9A4FF" }, ... },
     },
     segments = { "updates", "kernel", "battery", "ram", "cpu",
