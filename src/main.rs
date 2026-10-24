@@ -36,10 +36,52 @@ fn set_status_text(text: &str) {
     }
 }
 
+/// `FlexiFlow -l N`: asks the already-running instance to switch the
+/// selected monitor to `layouts[N]` (config.lua's `layouts` table,
+/// counting from 0) and exits. Sent as a root-window ClientMessage the
+/// WM handles in `handlers.rs`'s `clientmessage`, the same way EWMH
+/// requests reach it. The layout symbol's right-click menu pipes xmenu's
+/// pick into this.
+fn send_setlayout(arg: &str) {
+    let Ok(idx) = arg.trim().parse::<usize>() else {
+        die(&format!("FlexiFlow: -l takes a layout index, got {arg:?}"));
+    };
+    unsafe {
+        use x11::xlib;
+        let dpy = xlib::XOpenDisplay(std::ptr::null_mut());
+        if dpy.is_null() {
+            die("FlexiFlow: cannot open display");
+        }
+        let root = xlib::XDefaultRootWindow(dpy);
+        let mut ev: xlib::XEvent = std::mem::zeroed();
+        ev.client_message.type_ = xlib::ClientMessage;
+        ev.client_message.window = root;
+        ev.client_message.message_type = xlib::XInternAtom(
+            dpy,
+            flexiflow::SETLAYOUT_ATOM.as_ptr(),
+            xlib::False,
+        );
+        ev.client_message.format = 32;
+        ev.client_message.data.set_long(0, idx as std::ffi::c_long);
+        xlib::XSendEvent(
+            dpy,
+            root,
+            xlib::False,
+            xlib::SubstructureRedirectMask | xlib::SubstructureNotifyMask,
+            &mut ev,
+        );
+        xlib::XCloseDisplay(dpy);
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() >= 2 && args[1] == "-b" {
         set_status_text(args.get(2).map(String::as_str).unwrap_or(""));
+        return;
+    }
+    if args.len() >= 2 && args[1] == "-l" {
+        send_setlayout(args.get(2).map(String::as_str).unwrap_or(""));
         return;
     }
 

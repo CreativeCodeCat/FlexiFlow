@@ -23,14 +23,16 @@ use crate::{
 use crate::{
     NORMAL_STATE, WITHDRAWN_STATE, arrange, cleanmask, configure, drawbar,
     drawbars,
-    enums::{Clk, Net},
-    focus, getsystraywidth, grabkeys, height, is_visible, manage, recttomon,
-    removesystrayicon, resizebarwin, resizeclient, restack, sendevent,
-    setclientstate, setfocus, setfullscreen, seturgent, status_textw,
-    swallowingclient, textw, unfocus, unmanage, updatebars, updategeom,
-    updatesizehints, updatestatus, updatesystray, updatesystrayicongeom,
-    updatesystrayiconstate, updatetitle, updatewindowtype, updatewmhints,
-    width, wintoclient, wintomon, wintosystrayicon,
+    enums::{Clk, Net, WM},
+    focus, getsystraywidth, grabkeys, height, is_visible,
+    key_handlers::setlayout,
+    manage, recttomon, removesystrayicon, resizebarwin, resizeclient, restack,
+    sendevent, setclientstate, setfocus, setfullscreen, seturgent,
+    status_textw, swallowingclient, textw, unfocus, unmanage, updatebars,
+    updategeom, updatesizehints, updatestatus, updatesystray,
+    updatesystrayicongeom, updatesystrayiconstate, updatetitle,
+    updatewindowtype, updatewmhints, width, wintoclient, wintomon,
+    wintosystrayicon,
     xembed::{
         SYSTEM_TRAY_REQUEST_DOCK, XEMBED_EMBEDDED_NOTIFY,
         XEMBED_EMBEDDED_VERSION, XEMBED_FOCUS_IN, XEMBED_MODALITY_ON,
@@ -251,6 +253,21 @@ pub(crate) fn clientmessage(state: &mut State, e: *mut XEvent) {
             updatesystray(state);
             setclientstate(state, c, NORMAL_STATE);
 
+            return;
+        }
+
+        // `FlexiFlow -l N` (see main.rs), e.g. from the layout menu
+        if cme.window == state.root
+            && cme.message_type == state.wmatom[WM::SetLayout as usize]
+        {
+            let idx = cme.data.get_long(0);
+            let n = state.config.layouts.len();
+            match usize::try_from(idx).ok().filter(|&i| i < n) {
+                Some(i) => setlayout(state, &Arg::L(Some(i))),
+                None => log::warn!(
+                    "-l: no layout at index {idx}, only {n} are configured"
+                ),
+            }
             return;
         }
 

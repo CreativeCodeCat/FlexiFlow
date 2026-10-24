@@ -3,9 +3,14 @@
 #![allow(clippy::missing_safety_doc, clippy::not_unsafe_ptr_arg_deref)]
 
 use std::{
-    ffi::{c_int, c_uint},
+    ffi::{CStr, c_int, c_uint},
     fmt::Debug,
 };
+
+/// Message type of the root-window ClientMessage `FlexiFlow -l N` sends
+/// to the running instance, asking it to switch the selected monitor to
+/// `layouts[N]` (`data.l[0]`).
+pub const SETLAYOUT_ATOM: &CStr = c"_FLEXIFLOW_SETLAYOUT";
 
 use config::key::FUNC_MAP;
 use enums::Clk;

@@ -28,6 +28,10 @@ Configuration lives in Lua instead of a header file you recompile.
   flexiflow_bar`) is a second binary that runs it on a timer, with its
   own Lua config, covering updates/kernel/battery/ram/cpu/keyboard/
   desktop/network/volume/clock.
+- **Layout switching from outside**: `FlexiFlow -l N` switches the
+  running instance's selected monitor to `layouts[N]` (counting from
+  0, in `src/config.lua`'s order) - handy for scripts and keybindings,
+  and what the layout symbol's right-click menu uses.
 - **Scratchpads**: any number of named scratchpad slots, each
   independently toggleable, matched by window class and spawned on
   first use.
@@ -129,7 +133,7 @@ highlights - see `src/config.lua` for the complete list:
 | Left/right-click a tag in the bar | View/toggle-view that tag |
 | `modkey` + left/right-click a tag in the bar | Move/toggle window to that tag |
 | Left-click the layout symbol | Cycle to the next layout |
-| Right-click the layout symbol | Open an `xmenu` picker to jump to any layout (no-op if `xmenu` isn't installed) |
+| Right-click the layout symbol | Open an `xmenu` picker to jump to any layout via `FlexiFlow -l` (no-op if `xmenu` isn't installed) |
 | Middle-click a window's title | Zoom it into the master area |
 | `modkey` + drag a window | Move it |
 | `modkey` + middle-click a window | Toggle floating |
