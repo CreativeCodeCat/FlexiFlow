@@ -1555,21 +1555,28 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
             let text = tag.to_owned();
             let w = textw(&mut state.drw, &text, state.lrpad);
             let selected = ((*m).tagset[(*m).seltags] & (1 << i)) != 0;
+            let occupied = (occ & (1 << i)) != 0;
             // each tag gets its own bar color (state.tagscheme) instead of
             // every tag sharing one global Scheme::Sel color; tags beyond
             // tagscheme's length (or when it's empty) just fall back to
             // the old Sel/Norm behavior.
             let tag_scheme = state.tagscheme.get(i).cloned();
-            drw::setscheme(
-                &mut state.drw,
-                if selected {
-                    tag_scheme.clone().unwrap_or_else(|| {
-                        state.scheme[Scheme::Sel].clone()
-                    })
-                } else {
-                    state.scheme[Scheme::Norm].clone()
-                },
-            );
+            let scheme = if selected {
+                tag_scheme
+                    .unwrap_or_else(|| state.scheme[Scheme::Sel].clone())
+            } else if occupied && let Some(tc) = &tag_scheme {
+                // has windows but isn't in view: the tag's own accent as
+                // its text (and indicator box) color on the normal
+                // background, so it stands out from the empty tags
+                vec![
+                    tc[Col::Bg as usize],
+                    state.scheme[(Scheme::Norm, Col::Bg)],
+                    state.scheme[(Scheme::Norm, Col::Border)],
+                ]
+            } else {
+                state.scheme[Scheme::Norm].clone()
+            };
+            drw::setscheme(&mut state.drw, scheme);
             log::trace!("drawbar: text 2");
             drw::text(
                 &mut state.drw,
@@ -1582,15 +1589,9 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
                 (urg as i32) & (1 << i),
             );
 
-            if (occ & (1 << i)) != 0 {
-                // tint the occupied-tag indicator box with this tag's own
-                // color even when it isn't currently selected, so each
-                // workspace stays visually distinct at a glance.
-                if !selected
-                    && let Some(tc) = tag_scheme
-                {
-                    drw::setscheme(&mut state.drw, tc);
-                }
+            if occupied {
+                // drawn in the same scheme as the tag's text, so on an
+                // occupied tag that isn't in view it's the tag's accent
                 drw::rect(
                     &mut state.drw,
                     x + boxs as i32,
