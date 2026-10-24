@@ -155,6 +155,7 @@ pub fn createmon(state: &State) -> *mut Monitor {
         (*m).lt[0] = &state.config.layouts[0];
         (*m).lt[1] = &state.config.layouts[1 % state.config.layouts.len()];
         (*m).ltsymbol = state.config.layouts[0].symbol.clone();
+        (*m).hovertag = None;
         (*m).gaps = Gaps {
             oh: state.config.gaps,
             ov: state.config.gaps,
@@ -261,6 +262,7 @@ pub fn setup(dpy: *mut Display) -> State {
             stext: String::new(),
             scheme: Default::default(),
             tagscheme: Vec::new(),
+            hoverscheme: Vec::new(),
             screen,
             root,
             wmcheckwin: xlib::XCreateSimpleWindow(
@@ -350,6 +352,21 @@ pub fn setup(dpy: *mut Display) -> State {
                 &state.config.tagcolors.0[i],
                 3,
             ));
+        }
+        // a tag without its own accent is highlighted with SchemeSel's
+        for i in 0..state.config.tags.len() {
+            let accent = state
+                .tagscheme
+                .get(i)
+                .map_or(state.scheme[(Scheme::Sel, Col::Bg)], |tc| {
+                    tc[Col::Bg as usize]
+                });
+            let bg = state.scheme[(Scheme::Norm, Col::Bg)];
+            state.hoverscheme.push(vec![
+                accent,
+                drw::clr_mix(&state.drw, &accent, &bg, HOVER_TINT),
+                state.scheme[(Scheme::Norm, Col::Border)],
+            ]);
         }
 
         // init system tray
@@ -1510,6 +1527,33 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     tw
 }
 
+/// How much of a tag's accent tints the bar background behind it while
+/// it's under the pointer (see `State::hoverscheme`).
+const HOVER_TINT: f32 = 0.3;
+
+/// The index of the tag drawn at `x` in a bar, if any.
+pub fn bartag_at(state: &mut State, x: c_int) -> Option<usize> {
+    let mut end = 0;
+    for (i, tag) in state.config.tags.iter().enumerate() {
+        end += textw(&mut state.drw, tag, state.lrpad);
+        if x < end {
+            return Some(i);
+        }
+    }
+    None
+}
+
+/// Highlight `tag` (or nothing) in `m`'s bar as the one under the
+/// pointer, redrawing the bar only when that changes.
+pub fn sethovertag(state: &mut State, m: *mut Monitor, tag: Option<usize>) {
+    unsafe {
+        if (*m).hovertag != tag {
+            (*m).hovertag = tag;
+            drawbar(state, m);
+        }
+    }
+}
+
 pub fn drawbar(state: &mut State, m: *mut Monitor) {
     log::trace!("drawbar");
     unsafe {
@@ -1564,6 +1608,8 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
             let scheme = if selected {
                 tag_scheme
                     .unwrap_or_else(|| state.scheme[Scheme::Sel].clone())
+            } else if (*m).hovertag == Some(i) {
+                state.hoverscheme[i].clone()
             } else if occupied && let Some(tc) = &tag_scheme {
                 // has windows but isn't in view: the tag's own accent as
                 // its text (and indicator box) color on the normal
@@ -1608,7 +1654,7 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         }
 
         let w = textw(&mut state.drw, &(*m).ltsymbol, state.lrpad);
-        drw::setscheme(&mut state.drw, state.scheme[Scheme::Norm].clone());
+        drw::setscheme(&mut state.drw, state.scheme[Scheme::Layout].clone());
         log::trace!("drawbar: text 3");
         x = drw::text(
             &mut state.drw,
@@ -1622,10 +1668,10 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         ) as i32;
         log::trace!("finished drawbar text 3");
 
-        // the power button, in the same scheme as the layout symbol
         if !state.config.powermenu.symbol.is_empty() {
             let symbol = &state.config.powermenu.symbol;
             let w = textw(&mut state.drw, symbol, state.lrpad);
+            drw::setscheme(&mut state.drw, state.scheme[Scheme::Power].clone());
             x = drw::text(
                 &mut state.drw,
                 x,
@@ -1764,7 +1810,11 @@ pub fn updatebars(state: &mut State) {
     let mut wa = xlib::XSetWindowAttributes {
         override_redirect: True,
         background_pixmap: ParentRelative as u64,
-        event_mask: ButtonPressMask | ExposureMask,
+        // motion and leave events drive the tags' hover highlight
+        event_mask: ButtonPressMask
+            | ExposureMask
+            | PointerMotionMask
+            | LeaveWindowMask,
         // everything else should be uninit I guess
         background_pixel: 0,
         border_pixmap: 0,
@@ -1966,6 +2016,17 @@ pub fn updategeom(state: &mut State) -> i32 {
     }
 }
 
+/// The monitor whose bar is `w`, or null if `w` isn't a bar.
+pub fn bartomon(state: &State, w: Window) -> *mut Monitor {
+    unsafe {
+        let mut m = state.mons;
+        while !m.is_null() && (*m).barwin != w {
+            m = (*m).next;
+        }
+        m
+    }
+}
+
 pub fn wintomon(state: &mut State, w: Window) -> *mut Monitor {
     log::trace!("wintomon");
     unsafe {
@@ -1974,12 +2035,9 @@ pub fn wintomon(state: &mut State, w: Window) -> *mut Monitor {
         if w == state.root && getrootptr(state, &mut x, &mut y) != 0 {
             return recttomon(state, x, y, 1, 1);
         }
-        let mut m = state.mons;
-        while !m.is_null() {
-            if w == (*m).barwin {
-                return m;
-            }
-            m = (*m).next;
+        let m = bartomon(state, w);
+        if !m.is_null() {
+            return m;
         }
         let c = wintoclient(state, w);
         if !c.is_null() {
@@ -2510,6 +2568,7 @@ pub static HANDLER: LazyLock<[HandlerFn; x11::xlib::LASTEvent as usize]> =
         ret[x11::xlib::Expose as usize] = handlers::expose;
         ret[x11::xlib::FocusIn as usize] = handlers::focusin;
         ret[x11::xlib::KeyPress as usize] = handlers::keypress;
+        ret[x11::xlib::LeaveNotify as usize] = handlers::leavenotify;
         ret[x11::xlib::MappingNotify as usize] = handlers::mappingnotify;
         ret[x11::xlib::MapRequest as usize] = handlers::maprequest;
         ret[x11::xlib::MotionNotify as usize] = handlers::motionnotify;

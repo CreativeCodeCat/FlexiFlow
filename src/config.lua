@@ -684,6 +684,18 @@ flexiflow = {
             border_focused,
             border_focused,
         },
+        -- the bar's layout symbol and power button (both optional,
+        -- drawn in `norm` without them)
+        layout = {
+            foreground,
+            "#2BC4C9",
+            "#2BC4C9",
+        },
+        power = {
+            foreground,
+            "#CC3333",
+            "#CC3333",
+        },
     },
     tagcolors = tagcolors(foreground, tag_accents),
     keys = keys,

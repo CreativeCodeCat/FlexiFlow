@@ -21,13 +21,13 @@ use crate::{
 };
 
 use crate::{
-    NORMAL_STATE, WITHDRAWN_STATE, arrange, cleanmask, configure, drawbar,
-    drawbars,
+    NORMAL_STATE, WITHDRAWN_STATE, arrange, bartag_at, bartomon, cleanmask,
+    configure, drawbar, drawbars,
     enums::{Clk, Net, WM},
     focus, getsystraywidth, grabkeys, height, is_visible,
     key_handlers::setlayout,
     manage, recttomon, removesystrayicon, resizebarwin, resizeclient, restack,
-    sendevent, setclientstate, setfocus, setfullscreen, seturgent,
+    sendevent, setclientstate, setfocus, setfullscreen, sethovertag, seturgent,
     status_textw, swallowingclient, textw, unfocus, unmanage, updatebars,
     updategeom, updatesizehints, updatestatus, updatesystray,
     updatesystrayicongeom, updatesystrayiconstate, updatetitle,
@@ -53,20 +53,12 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
             crate::focus(state, null_mut());
         }
         if ev.window == (*state.selmon).barwin {
-            let mut i = 0;
-            let mut x = 0;
-            // emulating do-while
-            loop {
-                x += textw(&mut state.drw, &state.config.tags[i], state.lrpad);
-                // condition
-                if ev.x < x {
-                    break;
-                }
-                i += 1;
-                if i >= state.config.tags.len() {
-                    break;
-                }
-            }
+            let x: i32 = state
+                .config
+                .tags
+                .iter()
+                .map(|tag| textw(&mut state.drw, tag, state.lrpad))
+                .sum();
             let ltw =
                 textw(&mut state.drw, &(*state.selmon).ltsymbol, state.lrpad);
             // the power button sits right after the layout symbol, and
@@ -80,7 +72,7 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                     state.lrpad,
                 )
             };
-            if i < state.config.tags.len() {
+            if let Some(i) = bartag_at(state, ev.x) {
                 click = Clk::TagBar;
                 arg = Arg::Ui(1 << i);
             } else if ev.x < x + ltw {
@@ -594,6 +586,12 @@ pub(crate) fn motionnotify(state: &mut State, e: *mut XEvent) {
     static mut MON: *mut Monitor = null_mut();
     unsafe {
         let ev = &(*e).motion;
+        let bm = bartomon(state, ev.window);
+        if !bm.is_null() {
+            let tag = bartag_at(state, ev.x);
+            sethovertag(state, bm, tag);
+            return;
+        }
         if ev.window != state.root {
             return;
         }
@@ -604,6 +602,17 @@ pub(crate) fn motionnotify(state: &mut State, e: *mut XEvent) {
             focus(state, null_mut());
         }
         MON = m;
+    }
+}
+
+/// The pointer leaving a bar drops its tag hover highlight.
+pub(crate) fn leavenotify(state: &mut State, e: *mut XEvent) {
+    log::trace!("leavenotify");
+    unsafe {
+        let m = bartomon(state, (*e).crossing.window);
+        if !m.is_null() {
+            sethovertag(state, m, None);
+        }
     }
 }
 

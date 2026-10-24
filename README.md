@@ -20,7 +20,9 @@ Configuration lives in Lua instead of a header file you recompile.
   layouts, scratchpads, and autostart commands are all plain data in
   `src/config.lua`, with no rebuild required to change them.
 - **Per-tag bar colors**: each tag gets its own accent color in the
-  bar instead of a single shared highlight color.
+  bar instead of a single shared highlight color, and is tinted with
+  it while the pointer is over it. The layout symbol and power button
+  take their own colors from `colors.layout` and `colors.power`.
 - **Colorized status bar**: the bar's status text understands inline
   `^c#RRGGBB^` (foreground) / `^b#RRGGBB^` (background) / `^d^`
   (reset) color codes. `FlexiFlow -b "text"` feeds new status text

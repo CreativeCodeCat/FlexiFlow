@@ -340,6 +340,9 @@ pub struct Monitor {
     pub lt: [*const Layout; 2usize],
     pub pertag: Pertag,
     pub gaps: Gaps,
+    /// The tag under the pointer in this monitor's bar, if any - drawn
+    /// highlighted (see `drawbar`).
+    pub hovertag: Option<usize>,
 }
 
 #[repr(C)]

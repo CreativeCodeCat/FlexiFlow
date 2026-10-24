@@ -10,6 +10,10 @@ pub enum Cur {
 pub enum Scheme {
     Norm,
     Sel,
+    /// the bar's layout symbol
+    Layout,
+    /// the bar's power button
+    Power,
 }
 
 /// Clicks

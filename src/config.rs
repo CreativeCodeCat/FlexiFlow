@@ -27,7 +27,7 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
     fn try_from(
         mut value: HashMap<String, Vec<String>>,
     ) -> Result<Self, Self::Error> {
-        let mut ret = vec![vec![], vec![]];
+        let mut ret = vec![vec![]; 4];
         let norm = value.remove("norm").ok_or("missing key norm")?;
         let sel = value.remove("sel").ok_or("missing key sel")?;
 
@@ -46,6 +46,27 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
             .into_iter()
             .map(CString::new)
             .collect::<Result<_, _>>()?;
+
+        // the bar's two buttons are optional, drawn like the rest of the
+        // bar (SchemeNorm) unless they're given their own colors
+        for (key, scheme) in
+            [("layout", Scheme::Layout), ("power", Scheme::Power)]
+        {
+            ret[scheme as usize] = match value.remove(key) {
+                Some(colors) if colors.len() != 3 => {
+                    return Err(format!(
+                        "colors.{key}: expected 3 colors (fg, bg, border), got {}",
+                        colors.len()
+                    )
+                    .into());
+                }
+                Some(colors) => colors
+                    .into_iter()
+                    .map(CString::new)
+                    .collect::<Result<_, _>>()?,
+                None => ret[Scheme::Norm as usize].clone(),
+            };
+        }
 
         Ok(Self(ret))
     }
@@ -307,6 +328,46 @@ mod tests {
         let got = Config::from_lua(&path).unwrap();
         let _ = std::fs::remove_dir_all(&dir);
         assert_debug_snapshot!(got)
+    }
+
+    fn colors(entries: &[(&str, &[&str])]) -> HashMap<String, Vec<String>> {
+        entries
+            .iter()
+            .map(|(k, v)| {
+                (k.to_string(), v.iter().map(|c| c.to_string()).collect())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn colormap_button_colors_fall_back_to_norm() {
+        let norm: &[&str] = &["#111111", "#222222", "#333333"];
+        let sel: &[&str] = &["#444444", "#555555", "#666666"];
+        let power: &[&str] = &["#777777", "#888888", "#999999"];
+        let cstrings = |c: &[&str]| -> Vec<CString> {
+            c.iter().map(|c| CString::new(*c).unwrap()).collect()
+        };
+
+        let got = ColorMap::try_from(colors(&[
+            ("norm", norm),
+            ("sel", sel),
+            ("power", power),
+        ]))
+        .unwrap();
+
+        assert_eq!(got.0[Scheme::Layout as usize], cstrings(norm));
+        assert_eq!(got.0[Scheme::Power as usize], cstrings(power));
+    }
+
+    #[test]
+    fn colormap_rejects_a_button_without_three_colors() {
+        let triple: &[&str] = &["#111111", "#222222", "#333333"];
+        let got = ColorMap::try_from(colors(&[
+            ("norm", triple),
+            ("sel", triple),
+            ("layout", &["#111111"]),
+        ]));
+        assert!(got.is_err());
     }
 
     #[test]

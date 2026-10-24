@@ -61,6 +61,9 @@ pub struct State {
     /// Per-tag bar colors, indexed by tag number (see
     /// `config::TagColors`); empty entries fall back to `scheme[Sel]`.
     pub tagscheme: Vec<Vec<Clr>>,
+    /// Bar colors for a tag under the pointer, one per tag: its accent on
+    /// a tint of that accent over the bar background.
+    pub hoverscheme: Vec<Vec<Clr>>,
     pub screen: c_int,
     pub root: Window,
     /// sum of left and right padding for text

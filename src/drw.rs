@@ -14,6 +14,7 @@ use x11::xft::{self, XftFont};
 use x11::xlib::{
     self, CapButt, Display, Drawable, False, GC, JoinMiter, LineSolid,
 };
+use x11::xrender::XRenderColor;
 
 use crate::Clr;
 use crate::Cursor as Cur;
@@ -243,6 +244,31 @@ fn clr_try_create(drw: &Drw, clrname: *const c_char) -> Option<Clr> {
             dest.as_mut_ptr(),
         ) != 0)
             .then(|| dest.assume_init())
+    }
+}
+
+/// `a` mixed into `b` by `t`: 0.0 is all `b`, 1.0 all `a`.
+pub fn clr_mix(drw: &Drw, a: &Clr, b: &Clr, t: f32) -> Clr {
+    let mix = |a: u16, b: u16| (a as f32 * t + b as f32 * (1.0 - t)) as u16;
+    let value = XRenderColor {
+        red: mix(a.color.red, b.color.red),
+        green: mix(a.color.green, b.color.green),
+        blue: mix(a.color.blue, b.color.blue),
+        alpha: 0xffff,
+    };
+    let mut dest = MaybeUninit::uninit();
+    unsafe {
+        if xft::XftColorAllocValue(
+            drw.dpy,
+            xlib::XDefaultVisual(drw.dpy, drw.screen),
+            xlib::XDefaultColormap(drw.dpy, drw.screen),
+            &value,
+            dest.as_mut_ptr(),
+        ) == 0
+        {
+            die("error, cannot allocate a mixed color");
+        }
+        dest.assume_init()
     }
 }
 
