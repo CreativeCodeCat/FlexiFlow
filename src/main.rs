@@ -5,7 +5,7 @@ use flexiflow::{cleanup, run, scan, setup};
 use xcb::Connection;
 
 use flexiflow::checkotherwm;
-use flexiflow::util::{die, run_autostart};
+use flexiflow::util::{die, restart_exe, run_autostart};
 
 pub use flexiflow::enums;
 
@@ -131,7 +131,8 @@ fn main() {
 /// Re-executes the running binary in place (`execvp`), used by the
 /// `restart` key handler. This replaces the process image, so it picks
 /// up both a rebuild on disk (if the binary at this path changed since
-/// launch) and a reloaded config.lua (loaded fresh in `setup()` on every
+/// launch, including one `make install` swapped in - see `restart_exe`)
+/// and a reloaded config.lua (loaded fresh in `setup()` on every
 /// startup) - no partial/live config reload needed. Managed windows are
 /// unaffected: by the time this runs, `cleanup` has already reparented
 /// them back to root without closing them, and the new process's `scan`
@@ -139,8 +140,10 @@ fn main() {
 fn restart_self() -> ! {
     use std::os::unix::process::CommandExt as _;
 
-    let exe = std::env::current_exe()
-        .unwrap_or_else(|_| std::env::args().next().unwrap_or_default().into());
+    let exe = restart_exe().map_or_else(
+        || std::env::args_os().next().unwrap_or_default(),
+        std::path::PathBuf::into_os_string,
+    );
     let err = std::process::Command::new(exe)
         .args(std::env::args_os().skip(1))
         .exec();

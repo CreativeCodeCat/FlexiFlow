@@ -19,7 +19,7 @@ use crate::core::{
     unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::enums::WM;
-use crate::util::spawn_child;
+use crate::util::{restart_exe, spawn_child};
 use crate::{Arg, Client, Gaps, Layout, Monitor};
 use crate::{State, cfor};
 
@@ -640,6 +640,12 @@ pub(crate) fn quit(state: &mut State, _arg: *const Arg) {
 /// Managed windows survive: `cleanup`'s `unmanage` only reparents them
 /// back to root, it doesn't close them.
 pub(crate) fn restart(state: &mut State, _arg: *const Arg) {
+    // once the event loop exits there's no going back, and a failed exec
+    // ends the whole session - so stay up if there's nothing to exec
+    if restart_exe().is_none() {
+        log::error!("restart: no FlexiFlow binary to re-exec, not restarting");
+        return;
+    }
     state.restart = true;
     state.running = false;
 }

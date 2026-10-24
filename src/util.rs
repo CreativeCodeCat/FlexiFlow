@@ -1,6 +1,22 @@
 use libc::{c_void, size_t};
+use std::ffi::OsStr;
 use std::io;
+use std::os::unix::ffi::OsStrExt as _;
+use std::path::PathBuf;
 use std::process::{Child, Command};
+
+/// The binary the `restart` key handler should re-exec: the one that's
+/// running, or - when `make install` has replaced it since launch, so
+/// /proc/self/exe reads "/usr/bin/FlexiFlow (deleted)" - whatever now
+/// lives at that path. `None` if there's nothing there to exec.
+pub fn restart_exe() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let exe = match exe.as_os_str().as_bytes().strip_suffix(b" (deleted)") {
+        Some(path) => PathBuf::from(OsStr::from_bytes(path)),
+        None => exe,
+    };
+    exe.is_file().then_some(exe)
+}
 
 /// Spawn each argv list in `cmds` once, ignoring any that fail to start
 /// (missing binary, etc.) — mirrors dwm/flexiflow's `runAutostart`, which
