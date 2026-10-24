@@ -1,6 +1,6 @@
 use std::cmp::max;
 use std::ffi::c_int;
-use std::io::Write as _;
+use std::io::{Read as _, Write as _};
 use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::ptr::null_mut;
@@ -405,11 +405,12 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     }
 }
 
-/// Pipes `state.config.layouts` straight into `xmenu` (`"<symbol>\t
-/// <index>"` per line, xmenu's own item/command format) and switches
-/// to whichever layout's index the user picked. If `xmenu` isn't on
-/// `$PATH`, this is a silent no-op - no external script, nothing to
-/// install, nothing to keep in sync with the layouts list by hand.
+/// Pipes `state.config.layouts` straight into `xmenu` (`"<symbol>
+/// <description>\t<index>"` per line, xmenu's own item/output format)
+/// and switches to whichever layout's index the user picked. If `xmenu`
+/// isn't on `$PATH`, this is a silent no-op - no external script,
+/// nothing to install, nothing to keep in sync with the layouts list by
+/// hand.
 ///
 /// Blocks the event loop while the menu is open, same as vanilla
 /// dwm's own popen()-based `layoutmenu()` - there's no async IPC
@@ -418,7 +419,6 @@ pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
     let mut child = match Command::new("xmenu")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
         .spawn()
     {
         Ok(child) => child,
@@ -435,24 +435,25 @@ pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
         log::warn!("layoutmenu: failed writing to xmenu's stdin: {e}");
     }
 
-    let out = match child.wait_with_output() {
-        Ok(out) => out,
-        Err(e) => {
-            log::warn!("layoutmenu: failed waiting on xmenu: {e}");
-            return;
-        }
-    };
-    if !out.status.success() {
+    // Read the pick straight off stdout (EOF once xmenu exits) rather
+    // than going by its exit status: setup() ignores SIGCHLD with
+    // SA_NOCLDWAIT, so the kernel reaps xmenu itself and any wait() on
+    // it just fails with ECHILD - which used to drop every selection.
+    let mut stdout = String::new();
+    if let Some(mut out) = child.stdout.take()
+        && let Err(e) = out.read_to_string(&mut stdout)
+    {
+        log::warn!("layoutmenu: failed reading xmenu's output: {e}");
+        return;
+    }
+    // only reaps anything if SIGCHLD handling ever changes; ECHILD otherwise
+    let _ = child.wait();
+    if stdout.trim().is_empty() {
         // normal: the user pressed Esc or clicked outside the menu
-        log::debug!(
-            "layoutmenu: xmenu exited with {:?}, stderr: {:?}",
-            out.status,
-            String::from_utf8_lossy(&out.stderr)
-        );
+        log::debug!("layoutmenu: xmenu closed without a selection");
         return;
     }
 
-    let stdout = String::from_utf8_lossy(&out.stdout);
     let Some(idx) = parse_layoutmenu_index(&stdout) else {
         log::warn!("layoutmenu: couldn't parse an index out of xmenu's output: {stdout:?}");
         return;
@@ -468,14 +469,18 @@ pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
     setlayout(state, &Arg::L(Some(idx)) as *const Arg);
 }
 
-/// `"<symbol>\t<index>"` per configured layout, in order - xmenu's own
-/// item/command format: it displays `<symbol>` but echoes `<index>`
-/// back on selection.
+/// `"<symbol> <description>\t<index>"` per configured layout, in order,
+/// which is xmenu's own item/output format: it displays the label but
+/// echoes `<index>` back on selection.
 fn layout_menu_text(layouts: &[Layout]) -> String {
     layouts
         .iter()
         .enumerate()
-        .map(|(i, l)| format!("{}\t{i}\n", l.symbol))
+        .map(|(i, l)| {
+            // no arrange function: vanilla dwm's floating layout
+            let desc = l.arrange.as_ref().map_or("NULL Layout", |a| a.1);
+            format!("{} {desc}\t{i}\n", l.symbol)
+        })
         .collect()
 }
 
@@ -1030,6 +1035,7 @@ pub(crate) fn togglescratch(state: &mut State, arg: *const Arg) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LayoutFn;
 
     #[test]
     fn parse_layoutmenu_index_reads_the_last_tab_separated_field() {
@@ -1044,22 +1050,30 @@ mod tests {
         assert_eq!(parse_layoutmenu_index("label\tnot a number"), None);
     }
 
+    fn layout(symbol: &str, arrange: Option<&str>) -> Layout {
+        Layout {
+            symbol: symbol.to_string(),
+            arrange: arrange.map(|a| LayoutFn::try_from(a.to_string()).unwrap()),
+        }
+    }
+
     #[test]
-    fn layout_menu_text_pairs_each_symbol_with_its_list_position() {
+    fn layout_menu_text_pairs_each_label_with_its_list_position() {
         let layouts = vec![
-            Layout { symbol: "[]=".to_string(), arrange: None },
-            Layout { symbol: "[M]".to_string(), arrange: None },
-            Layout { symbol: "><>".to_string(), arrange: None },
+            layout("[]=", Some("tile")),
+            layout("[M]", Some("monocle")),
+            layout("><>", None),
         ];
-        assert_eq!(layout_menu_text(&layouts), "[]=\t0\n[M]\t1\n><>\t2\n");
+        assert_eq!(
+            layout_menu_text(&layouts),
+            "[]= Tiled Layout\t0\n[M] Monocle Layout\t1\n><> NULL Layout\t2\n"
+        );
     }
 
     #[test]
     fn layout_menu_text_round_trips_through_parse_layoutmenu_index() {
-        let layouts = vec![
-            Layout { symbol: "[]=".to_string(), arrange: None },
-            Layout { symbol: "[M]".to_string(), arrange: None },
-        ];
+        let layouts =
+            vec![layout("[]=", Some("tile")), layout("[M]", Some("monocle"))];
         let menu = layout_menu_text(&layouts);
         // whichever line xmenu would echo back for the 2nd entry
         let picked_line = menu.lines().nth(1).unwrap();
