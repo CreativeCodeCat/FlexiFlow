@@ -1420,7 +1420,7 @@ pub fn textw(drw: &mut Drw, x: &str, lrpad: c_int) -> c_int {
 /// Split `text` on inline color codes - `^c#RRGGBB^` sets the
 /// foreground, `^b#RRGGBB^` the background, `^d^` resets both to
 /// `norm_fg`/`norm_bg` - into `(text, fg, bg)` runs. Unrecognized codes
-/// are dropped silently. `flexiflow_bar` (and this fork's `-s` flag)
+/// are dropped silently. `flexiflow_bar` (and this fork's `-b` flag)
 /// produce text in this format.
 fn parse_status_segments(
     text: &str,
@@ -1532,7 +1532,7 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         if m == state.selmon {
             // status is only drawn on selected monitor; inline color
             // codes (^c#hex^/^b#hex^/^d^) come from flexiflow_bar via
-            // this fork's `-s` flag
+            // this fork's `-b` flag
             log::trace!("drawbar: text");
             tw = draw_status2d(state, (*m).ww - stw as i32, state.bh as u32);
         }

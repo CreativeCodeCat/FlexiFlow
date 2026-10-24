@@ -23,9 +23,9 @@ Configuration lives in Lua instead of a header file you recompile.
   bar instead of a single shared highlight color.
 - **Colorized status bar**: the bar's status text understands inline
   `^c#RRGGBB^` (foreground) / `^b#RRGGBB^` (background) / `^d^`
-  (reset) color codes. `FlexiFlow -s "text"` feeds new status text
+  (reset) color codes. `FlexiFlow -b "text"` feeds new status text
   to an already-running instance; `flexiflow_bar` (`src/bin/
-  flexiflow_bar`) is a second binary that does this itself, with its
+  flexiflow_bar`) is a second binary that runs it on a timer, with its
   own Lua config, covering updates/kernel/battery/ram/cpu/keyboard/
   desktop/network/volume/clock.
 - **Scratchpads**: any number of named scratchpad slots, each
