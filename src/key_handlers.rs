@@ -1053,7 +1053,8 @@ mod tests {
     fn layout(symbol: &str, arrange: Option<&str>) -> Layout {
         Layout {
             symbol: symbol.to_string(),
-            arrange: arrange.map(|a| LayoutFn::try_from(a.to_string()).unwrap()),
+            arrange: arrange
+                .map(|a| LayoutFn::try_from(a.to_string()).unwrap()),
         }
     }
 

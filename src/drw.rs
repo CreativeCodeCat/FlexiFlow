@@ -270,7 +270,10 @@ pub fn scm_create(
 /// status text's `^c`/`^b` codes), where a typo in some other program's
 /// output shouldn't take the whole window manager down with it.
 pub fn scm_try_create(drw: &Drw, clrnames: &[CString]) -> Option<Vec<Clr>> {
-    clrnames.iter().map(|clr| clr_try_create(drw, clr.as_ptr())).collect()
+    clrnames
+        .iter()
+        .map(|clr| clr_try_create(drw, clr.as_ptr()))
+        .collect()
 }
 
 /// # Safety
