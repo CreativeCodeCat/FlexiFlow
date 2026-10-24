@@ -185,8 +185,12 @@ pub struct LayoutFn(pub fn(&mut State, *mut Monitor), pub &'static str);
 /// treats the `&'static str` field as borrowed from the input and would
 /// demand `'de: 'static` of the whole config.
 impl<'de> serde::Deserialize<'de> for LayoutFn {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        String::deserialize(d)?.try_into().map_err(serde::de::Error::custom)
+    fn deserialize<D: serde::Deserializer<'de>>(
+        d: D,
+    ) -> Result<Self, D::Error> {
+        String::deserialize(d)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
     }
 }
 
@@ -202,10 +206,9 @@ impl TryFrom<String> for LayoutFn {
             "centered_master" => {
                 Ok(Self(centered_master, "Centered Master Layout"))
             }
-            "centered_floating_master" => Ok(Self(
-                centered_floating_master,
-                "Centered Floating Layout",
-            )),
+            "centered_floating_master" => {
+                Ok(Self(centered_floating_master, "Centered Floating Layout"))
+            }
             "deck" => Ok(Self(deck, "Deck Layout")),
             "spiral" => Ok(Self(spiral, "Spiral Layout")),
             "dwindle" => Ok(Self(dwindle, "Dwindle Layout")),
