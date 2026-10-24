@@ -73,9 +73,10 @@ end
 
 -- For each tag key (N = 1, ..., 9, 0) this inserts:
 --
--- * MOD+N           to view the tag
+-- * MOD+N            to view the tag
 -- * MOD+Ctrl+N       to toggle viewing the tag (dwm's bitmask multi-view)
--- * MOD+Shift+N      to send the focused window to the tag
+-- * MOD+Shift+N      to send the focused window to the tag and follow it
+-- * MOD+Alt+N        to send the focused window to the tag
 -- * MOD+Shift+Ctrl+N to toggle the window's presence on the tag
 function tagkeys(keys)
     for i, xk in ipairs(
@@ -97,7 +98,8 @@ function tagkeys(keys)
         }
         table.insert(keys, key(modkey, xk, view, arg))
         table.insert(keys, key(modkey | ControlMask, xk, toggleview, arg))
-        table.insert(keys, key(s_mod, xk, tag, arg))
+        table.insert(keys, key(s_mod, xk, tagview, arg))
+        table.insert(keys, key(modkey | altkey, xk, tag, arg))
         table.insert(keys, key(s_mod | ControlMask, xk, toggletag, arg))
     end
 end

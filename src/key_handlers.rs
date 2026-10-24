@@ -550,6 +550,13 @@ pub(crate) fn tag(state: &mut State, arg: *const Arg) {
     }
 }
 
+/// `tag`, then `view` the same tag, so the focused window is sent there
+/// and you follow it.
+pub(crate) fn tagview(state: &mut State, arg: *const Arg) {
+    tag(state, arg);
+    view(state, arg);
+}
+
 fn dirtomon(state: &State, dir: i32) -> *mut Monitor {
     unsafe {
         let mut m;

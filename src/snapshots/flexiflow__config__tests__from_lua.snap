@@ -978,6 +978,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 49,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                1,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 49,
             func: Some(
@@ -1018,6 +1028,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 50,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                2,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 50,
             func: Some(
@@ -1058,6 +1078,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 51,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                4,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 51,
             func: Some(
@@ -1098,6 +1128,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 52,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                8,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 52,
             func: Some(
@@ -1138,6 +1178,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 53,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                16,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 53,
             func: Some(
@@ -1178,6 +1228,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 54,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                32,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 54,
             func: Some(
@@ -1218,6 +1278,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 55,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                64,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 55,
             func: Some(
@@ -1258,6 +1328,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 56,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                128,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 56,
             func: Some(
@@ -1298,6 +1378,16 @@ Config {
             ),
         },
         Key {
+            mod_: 72,
+            keysym: 57,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                256,
+            ),
+        },
+        Key {
             mod_: 69,
             keysym: 57,
             func: Some(
@@ -1329,6 +1419,16 @@ Config {
         },
         Key {
             mod_: 65,
+            keysym: 48,
+            func: Some(
+                "[func]",
+            ),
+            arg: Ui(
+                512,
+            ),
+        },
+        Key {
+            mod_: 72,
             keysym: 48,
             func: Some(
                 "[func]",

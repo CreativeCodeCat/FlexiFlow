@@ -117,7 +117,8 @@ highlights - see `src/config.lua` for the complete list:
 | `modkey` + `g` | Toggle gaps |
 | `modkey` + `1`-`9`,`0` | View tag N |
 | `modkey+Ctrl` + `1`-`9`,`0` | Toggle viewing tag N |
-| `s_mod` + `1`-`9`,`0` | Move focused window to tag N |
+| `s_mod` + `1`-`9`,`0` | Move focused window to tag N and follow it there |
+| `modkey+Alt` + `1`-`9`,`0` | Move focused window to tag N |
 | `s_mod+Ctrl` + `1`-`9`,`0` | Toggle focused window's presence on tag N |
 | `modkey` + `[`/`]` or `,`/`.` | Focus previous/next monitor |
 | `s_mod` + `,`/`.` | Move focused window to previous/next monitor |
