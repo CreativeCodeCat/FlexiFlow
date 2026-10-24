@@ -42,7 +42,10 @@ fn kill_other_instances() {
 }
 
 fn main() {
-    env_logger::init();
+    // default to "warn" (env_logger's own default is "off", silent)
+    // so real problems are visible without needing RUST_LOG set
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn"))
+        .init();
     kill_other_instances();
 
     let cfg = config::load();

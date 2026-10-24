@@ -43,7 +43,13 @@ fn main() {
         return;
     }
 
-    env_logger::init();
+    // default to "warn" so real problems (a bad config file, a
+    // spawn failure, ...) are visible without having to know to set
+    // RUST_LOG first - env_logger's own default is "off", so without
+    // this, every log::warn!/error! in the whole codebase is silent
+    // unless the user already knew to opt in
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn"))
+        .init();
 
     // SAFETY: called once, single-threaded, before any other threads exist.
     unsafe {
