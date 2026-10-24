@@ -135,8 +135,14 @@ highlights - see `src/config.lua` for the complete list:
 | Left/right-click a tag in the bar | View/toggle-view that tag |
 | `modkey` + left/right-click a tag in the bar | Move/toggle window to that tag |
 | Left-click the layout symbol | Cycle to the next layout |
-| Right-click the layout symbol | Open an `xmenu` picker to jump to any layout via `FlexiFlow -l` (no-op if `xmenu` isn't installed) |
-| Click the power button (next to the layout symbol) | Open an `xmenu` of `powermenu` entries: logout, restart, shutdown by default |
+| Right-click the layout symbol | Open a menu at the pointer to jump to any layout via `FlexiFlow -l` |
+| Click the power button (next to the layout symbol) | Open a menu at the pointer of `powermenu` entries: logout, restart, shutdown by default |
+
+Both menus run the `menu` command from `src/config.lua`, which is
+[fleximenu](https://github.com/CreativeCodeCat/FlexiMenu) by default; any
+dmenu-style menu that takes `-p` and `-l` works. With fleximenu, a
+layout's or power entry's `color` (`r`, `g`, `y`, `b`, `p`, `h` or `s`)
+boxes its symbol or icon in that color while it's selected.
 | Middle-click a window's title | Zoom it into the master area |
 | `modkey` + drag a window | Move it |
 | `modkey` + middle-click a window | Toggle floating |

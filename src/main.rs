@@ -40,8 +40,8 @@ fn set_status_text(text: &str) {
 /// selected monitor to `layouts[N]` (config.lua's `layouts` table,
 /// counting from 0) and exits. Sent as a root-window ClientMessage the
 /// WM handles in `handlers.rs`'s `clientmessage`, the same way EWMH
-/// requests reach it. The layout symbol's right-click menu pipes xmenu's
-/// pick into this.
+/// requests reach it. The layout symbol's right-click menu hands its pick
+/// to this.
 fn send_setlayout(arg: &str) {
     let Ok(idx) = arg.trim().parse::<usize>() else {
         die(&format!("FlexiFlow: -l takes a layout index, got {arg:?}"));

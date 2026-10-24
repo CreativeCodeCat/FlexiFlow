@@ -404,61 +404,110 @@ pub(crate) fn cyclelayout(state: &mut State, arg: *const Arg) {
     }
 }
 
-/// Pipes `state.config.layouts` into `xmenu` (`"<symbol>
-/// <description>\t<index>"` per line, xmenu's own item/output format)
-/// and hands whichever index the user picks to `FlexiFlow -l`, which
-/// asks this instance to switch to it (see `clientmessage`).
+/// Shell run once the layout menu's pick is known as `$i`: ask this
+/// instance to switch to that layout (see `clientmessage`).
+const LAYOUT_PICKED: &str = r#"exec FlexiFlow -l "$i""#;
+
+/// Shell run once the power menu's pick is known as `$i`: the items'
+/// commands follow the menu lines as `$2`, `$3`, ..., so shift the
+/// picked one into `$1` and run it.
+const POWER_PICKED: &str = r#"shift $((i + 1)) && exec sh -c "$1""#;
+
+/// Pipes `state.config.layouts` into the `menu` program, one
+/// `"<symbol> <description>"` per line, and switches to whichever one
+/// the user picks.
 ///
 /// The whole pipeline runs in the background under `sh`, so the event
-/// loop keeps going while the menu is open instead of blocking on
-/// xmenu. Esc, a click outside the menu, or a missing `xmenu` just ends
-/// the pipeline without running `FlexiFlow -l`.
+/// loop keeps going while the menu is open. Esc or a missing menu
+/// program just ends the pipeline without switching.
 pub(crate) fn layoutmenu(state: &mut State, _arg: *const Arg) {
-    // the menu text goes in as $1 rather than being spliced into the
-    // script, so no symbol or description can be mistaken for shell
-    const SCRIPT: &str = r#"i=$(printf '%s' "$1" | xmenu) && [ -n "$i" ] && exec FlexiFlow -l "$i""#;
-    let menu = layout_menu_text(&state.config.layouts);
+    let layouts = &state.config.layouts;
+    let script =
+        menu_script(&state.config.menu, "Layout", layouts.len(), LAYOUT_PICKED);
+    let lines = layout_menu_text(layouts);
     if let Err(e) =
-        spawn_child(Command::new("sh").args(["-c", SCRIPT, "sh", &menu]))
+        spawn_child(Command::new("sh").args(["-c", &script, "sh", &lines]))
     {
         log::warn!("layoutmenu: failed to spawn sh: {e}");
     }
 }
 
-/// Pipes `state.config.powermenu.items` into `xmenu` (`"<label>\t
-/// <command>"` per line, so xmenu prints the picked item's command) and
-/// runs the pick through `sh -c`. The same background pipeline as
-/// `layoutmenu`, so the event loop keeps going while the menu is open,
-/// and Esc, a click outside the menu, or a missing `xmenu` runs nothing.
+/// Pipes `state.config.powermenu.items`' labels into the `menu` program
+/// and runs the picked item's command through `sh -c`. The same
+/// background pipeline as `layoutmenu`: Esc or a missing menu program
+/// runs nothing.
 pub(crate) fn powermenu(state: &mut State, _arg: *const Arg) {
-    // the menu text goes in as $1, never spliced into the script
-    const SCRIPT: &str = r#"cmd=$(printf '%s' "$1" | xmenu) && [ -n "$cmd" ] && exec sh -c "$cmd""#;
-    let menu = power_menu_text(&state.config.powermenu.items);
-    if let Err(e) =
-        spawn_child(Command::new("sh").args(["-c", SCRIPT, "sh", &menu]))
-    {
+    let items = &state.config.powermenu.items;
+    let script =
+        menu_script(&state.config.menu, "Power", items.len(), POWER_PICKED);
+    let lines = power_menu_text(items);
+    let commands = items.iter().map(|item| item.command.as_str());
+    if let Err(e) = spawn_child(
+        Command::new("sh")
+            .args(["-c", &script, "sh", &lines])
+            .args(commands),
+    ) {
         log::warn!("powermenu: failed to spawn sh: {e}");
+    }
+}
+
+/// A `sh -c` script that pipes the menu lines in `$1` into `menu` (with
+/// `-p prompt -l lines` added), works out which line was picked as `$i`,
+/// counting from 0, and then runs `picked`. Nothing runs if the menu is
+/// dismissed or prints something that isn't one of its lines.
+///
+/// Only `menu`'s words are spliced into the script, each one quoted; the
+/// lines stay in `$1`, so no label can be mistaken for shell.
+fn menu_script(
+    menu: &[String],
+    prompt: &str,
+    lines: usize,
+    picked: &str,
+) -> String {
+    let lines = lines.to_string();
+    let argv = menu
+        .iter()
+        .map(String::as_str)
+        .chain(["-p", prompt, "-l", &lines])
+        .map(sh_quote)
+        .collect::<Vec<_>>()
+        .join(" ");
+    format!(
+        r#"c=$(printf '%s' "$1" | {argv}) && i=$(printf '%s' "$1" | c="$c" awk '$0 == ENVIRON["c"] {{ print NR - 1; exit }}') && [ -n "$i" ] && {picked}"#
+    )
+}
+
+/// `word` as a single-quoted shell word.
+fn sh_quote(word: &str) -> String {
+    format!("'{}'", word.replace('\'', r"'\''"))
+}
+
+/// One menu line: `text` behind fleximenu's `:<color> ` prefix when
+/// there's a `color`, which draws the text up to the next space (a
+/// layout symbol, a label's icon) in a box of that color while selected.
+fn menu_line(color: &str, text: &str) -> String {
+    if color.is_empty() {
+        format!("{text}\n")
+    } else {
+        format!(":{color} {text}\n")
     }
 }
 
 fn power_menu_text(items: &[PowerMenuItem]) -> String {
     items
         .iter()
-        .map(|item| format!("{}\t{}\n", item.label, item.command))
+        .map(|item| menu_line(&item.color, &item.label))
         .collect()
 }
 
-/// `"<symbol> <description>\t<index>"` per configured layout, in order,
-/// which is xmenu's own item/output format: it displays the label but
-/// echoes `<index>` back on selection.
+/// `"<symbol> <description>"` per configured layout, in order.
 fn layout_menu_text(layouts: &[Layout]) -> String {
     layouts
         .iter()
-        .enumerate()
-        .map(|(i, l)| {
+        .map(|l| {
             // no arrange function: vanilla dwm's floating layout
             let desc = l.arrange.as_ref().map_or("NULL Layout", |a| a.1);
-            format!("{} {desc}\t{i}\n", l.symbol)
+            menu_line(&l.color, &format!("{} {desc}", l.symbol))
         })
         .collect()
 }
@@ -1015,41 +1064,93 @@ mod tests {
     use super::*;
     use crate::LayoutFn;
 
-    fn layout(symbol: &str, arrange: Option<&str>) -> Layout {
+    fn layout(symbol: &str, arrange: Option<&str>, color: &str) -> Layout {
         Layout {
             symbol: symbol.to_string(),
             arrange: arrange
                 .map(|a| LayoutFn::try_from(a.to_string()).unwrap()),
+            color: color.to_string(),
         }
     }
 
     #[test]
-    fn layout_menu_text_pairs_each_label_with_its_list_position() {
+    fn layout_menu_text_puts_each_color_before_its_symbol() {
         let layouts = vec![
-            layout("[]=", Some("tile")),
-            layout("[M]", Some("monocle")),
-            layout("><>", None),
+            layout("[]=", Some("tile"), "b"),
+            layout("[M]", Some("monocle"), ""),
+            layout("><>", None, "h"),
         ];
         assert_eq!(
             layout_menu_text(&layouts),
-            "[]= Tiled Layout\t0\n[M] Monocle Layout\t1\n><> NULL Layout\t2\n"
+            ":b []= Tiled Layout\n[M] Monocle Layout\n:h ><> NULL Layout\n"
         );
     }
 
     #[test]
-    fn power_menu_text_pairs_each_label_with_its_command() {
-        let item = |label: &str, command: &str| PowerMenuItem {
+    fn power_menu_text_lists_the_labels_without_their_commands() {
+        let item = |label: &str, command: &str, color: &str| PowerMenuItem {
             label: label.to_string(),
             command: command.to_string(),
+            color: color.to_string(),
         };
         let items = vec![
-            item("Logout", "loginctl terminate-session \"$XDG_SESSION_ID\""),
-            item("Shutdown", "systemctl poweroff"),
+            item("\u{F011} Shutdown", "systemctl poweroff", "r"),
+            item(
+                "Logout",
+                "loginctl terminate-session \"$XDG_SESSION_ID\"",
+                "",
+            ),
         ];
+        assert_eq!(power_menu_text(&items), ":r \u{F011} Shutdown\nLogout\n");
+    }
+
+    #[test]
+    fn sh_quote_keeps_single_quotes_inside_the_word() {
         assert_eq!(
-            power_menu_text(&items),
-            "Logout\tloginctl terminate-session \"$XDG_SESSION_ID\"\n\
-             Shutdown\tsystemctl poweroff\n"
+            sh_quote("FiraCode Nerd Font:size=8"),
+            "'FiraCode Nerd Font:size=8'"
         );
+        assert_eq!(sh_quote("it's"), r"'it'\''s'");
+    }
+
+    /// Runs a `menu_script` under `sh` with a stand-in menu that prints
+    /// whatever `pick` (a `sed` script) selects from its input, and
+    /// returns what the script printed.
+    fn run_menu(
+        pick: &str,
+        lines: &str,
+        picked: &str,
+        args: &[&str],
+    ) -> String {
+        let menu =
+            ["sh", "-c", &format!("sed -n '{pick}'"), "menu"].map(String::from);
+        let script = menu_script(&menu, "Test", 3, picked);
+        let out = Command::new("sh")
+            .args(["-c", &script, "sh", lines])
+            .args(args)
+            .output()
+            .unwrap();
+        String::from_utf8(out.stdout).unwrap()
+    }
+
+    #[test]
+    fn menu_script_finds_the_position_of_the_picked_line() {
+        // shell syntax in a line is just text to match
+        let lines = ":b []= Tiled\n:y it's $HOME `x` [@]\n><> NULL\n";
+        assert_eq!(run_menu("2p", lines, r#"printf %s "$i""#, &[]), "1");
+        assert_eq!(run_menu("3p", lines, r#"printf %s "$i""#, &[]), "2");
+    }
+
+    #[test]
+    fn menu_script_runs_nothing_for_a_line_the_menu_never_had() {
+        let lines = "one\ntwo\n";
+        assert_eq!(run_menu("s/.*/three/p;q", lines, "echo ran", &[]), "");
+    }
+
+    #[test]
+    fn power_picked_runs_the_command_paired_with_the_pick() {
+        let lines = "Logout\nRestart\nShutdown\n";
+        let commands = ["echo logout", "echo restart", "echo shutdown"];
+        assert_eq!(run_menu("2p", lines, POWER_PICKED, &commands), "restart\n");
     }
 }

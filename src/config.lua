@@ -752,10 +752,9 @@ flexiflow = {
     buttons = {
         -- left click cycles forward through all of `layouts` below,
         -- matching the M-space key (instead of setlayout's upstream
-        -- "toggle last two" behavior); right click pipes `layouts`
-        -- into xmenu (key_handlers.rs::layoutmenu) and the pick into
-        -- `FlexiFlow -l` to jump to any of them - a silent no-op if
-        -- xmenu isn't installed
+        -- "toggle last two" behavior); right click opens `layouts` in
+        -- `menu` (below) to jump to any of them - a silent no-op if the
+        -- menu program isn't installed
         button(
             ClkLtSymbol, 0, Button1, cyclelayout, {
                 I = 1,
@@ -763,7 +762,7 @@ flexiflow = {
         ),
         button(ClkLtSymbol, 0, Button3, layoutmenu),
         -- the power button next to the layout symbol opens `powermenu`
-        -- (below) in xmenu
+        -- (below) in `menu`
         button(ClkPowerButton, 0, Button1, powermenu),
         button(
             ClkWinTitle, 0, Button2, zoom, {
@@ -812,88 +811,122 @@ flexiflow = {
             }
         ),
     },
-    -- M-space/M-C-comma/M-C-period (cyclelayout) visit these in order
+    -- M-space/M-C-comma/M-C-period (cyclelayout) visit these in order.
+    -- `color` (r g y b p h s) boxes a layout's symbol in that color
+    -- while it's selected in the layout menu
     layouts = {
         {
             symbol = "[]=",
+            color = "b",
             arrange = tile,
         },
         {
             symbol = "[M]",
+            color = "p",
             arrange = monocle,
         },
         {
             symbol = "[@]",
+            color = "y",
             arrange = spiral,
         },
         {
             symbol = "[D]",
+            color = "y",
             arrange = dwindle,
         },
         {
             symbol = "H[]",
+            color = "p",
             arrange = deck,
         },
         {
             symbol = "TTT",
+            color = "g",
             arrange = bstack,
         },
         {
             symbol = "===",
+            color = "g",
             arrange = bstack_horiz,
         },
         {
             symbol = "HHH",
+            color = "r",
             arrange = grid,
         },
         {
             symbol = "###",
+            color = "r",
             arrange = nrow_grid,
         },
         {
             symbol = "---",
+            color = "r",
             arrange = horiz_grid,
         },
         {
             symbol = ":::",
+            color = "r",
             arrange = gapless_grid,
         },
         {
             symbol = "|M|",
+            color = "b",
             arrange = centered_master,
         },
         {
             symbol = ">M>",
+            color = "b",
             arrange = centered_floating_master,
         },
         -- no arrange function: vanilla dwm's "><>" floating layout
         {
             symbol = "><>",
+            color = "h",
         },
     },
     scratchpads = scratchpads,
 
     -- the bar's power button (drawn right after the layout symbol; leave
-    -- `symbol` empty for no button) and the xmenu it opens: picking an
-    -- item runs its `command` through `sh -c`. Labels are plain text on
-    -- purpose: an xmenu whose font lacks a glyph can crash on exit
-    -- trying a fallback font, and then the command never runs
+    -- `symbol` empty for no button) and the menu it opens: picking an
+    -- item runs its `command` through `sh -c`. `color` (r g y b p h s)
+    -- boxes the label's icon in that color while it's selected
     powermenu = {
         symbol = "\u{F011}",
         items = {
             {
-                label = "Logout",
+                label = "\u{F08B} Logout",
                 command = 'loginctl terminate-session "$XDG_SESSION_ID"',
+                color = "y",
             },
             {
-                label = "Restart",
+                label = "\u{F021} Restart",
                 command = "systemctl reboot",
+                color = "b",
             },
             {
-                label = "Shutdown",
+                label = "\u{F011} Shutdown",
                 command = "systemctl poweroff",
+                color = "r",
             },
         },
+    },
+
+    -- the menu program the layout and power menus open (dmenu-style: one
+    -- item per line in, the picked line out); FlexiFlow adds `-p <prompt>`
+    -- and `-l <number of items>`. These are fleximenu's flags: -M opens
+    -- it at the mouse pointer, -z 222 makes it 222 pixels wide, and -h -1
+    -- makes each item 2.5 times the font height
+    menu = {
+        "fleximenu",
+        "--fn",
+        "FiraCode Nerd Font:size=8",
+        "-h",
+        "-1",
+        "-M",
+        "-z",
+        "222",
     },
 
     -- Subset of flexiflow's old `autostart[]` worth spawning unconditionally;

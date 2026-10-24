@@ -199,6 +199,17 @@ pub struct Config {
     /// without one, there's no button.
     #[serde(default)]
     pub powermenu: PowerMenu,
+
+    /// The menu program, with its arguments, that the layout and power
+    /// menus pipe their items into: dmenu-style, reading one item per
+    /// line and printing the picked line. `-p <prompt>` and `-l <number
+    /// of items>` are added for each menu.
+    #[serde(default = "default_menu")]
+    pub menu: Vec<String>,
+}
+
+fn default_menu() -> Vec<String> {
+    vec!["fleximenu".to_string()]
 }
 
 fn default_gaps() -> c_int {

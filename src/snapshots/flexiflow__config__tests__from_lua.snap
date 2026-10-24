@@ -1874,6 +1874,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "b",
         },
         Layout {
             symbol: "[M]",
@@ -1882,6 +1883,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "p",
         },
         Layout {
             symbol: "[@]",
@@ -1890,6 +1892,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "y",
         },
         Layout {
             symbol: "[D]",
@@ -1898,6 +1901,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "y",
         },
         Layout {
             symbol: "H[]",
@@ -1906,6 +1910,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "p",
         },
         Layout {
             symbol: "TTT",
@@ -1914,6 +1919,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "g",
         },
         Layout {
             symbol: "===",
@@ -1922,6 +1928,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "g",
         },
         Layout {
             symbol: "HHH",
@@ -1930,6 +1937,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "r",
         },
         Layout {
             symbol: "###",
@@ -1938,6 +1946,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "r",
         },
         Layout {
             symbol: "---",
@@ -1946,6 +1955,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "r",
         },
         Layout {
             symbol: ":::",
@@ -1954,6 +1964,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "r",
         },
         Layout {
             symbol: "|M|",
@@ -1962,6 +1973,7 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "b",
         },
         Layout {
             symbol: ">M>",
@@ -1970,10 +1982,12 @@ Config {
                     "[func]",
                 ),
             ),
+            color: "b",
         },
         Layout {
             symbol: "><>",
             arrange: None,
+            color: "h",
         },
     ],
     scratchpads: [
@@ -2033,17 +2047,30 @@ Config {
         symbol: "\u{f011}",
         items: [
             PowerMenuItem {
-                label: "Logout",
+                label: "\u{f08b} Logout",
                 command: "loginctl terminate-session \"$XDG_SESSION_ID\"",
+                color: "y",
             },
             PowerMenuItem {
-                label: "Restart",
+                label: "\u{f021} Restart",
                 command: "systemctl reboot",
+                color: "b",
             },
             PowerMenuItem {
-                label: "Shutdown",
+                label: "\u{f011} Shutdown",
                 command: "systemctl poweroff",
+                color: "r",
             },
         ],
     },
+    menu: [
+        "fleximenu",
+        "--fn",
+        "FiraCode Nerd Font:size=8",
+        "-h",
+        "-1",
+        "-M",
+        "-z",
+        "222",
+    ],
 }

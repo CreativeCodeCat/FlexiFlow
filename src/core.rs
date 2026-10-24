@@ -2275,8 +2275,11 @@ pub fn cleanup(mut state: State) {
     unsafe {
         let a = Arg::Ui(!0);
         view(&mut state, &a);
-        (*state.selmon).lt[(*state.selmon).sellt] =
-            &Layout { symbol: String::new(), arrange: None };
+        (*state.selmon).lt[(*state.selmon).sellt] = &Layout {
+            symbol: String::new(),
+            arrange: None,
+            color: String::new(),
+        };
 
         let mut m = state.mons;
         while !m.is_null() {

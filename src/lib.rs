@@ -178,7 +178,7 @@ pub struct ScratchSpec {
 
 /// The bar's power button: `symbol` is drawn right after the layout
 /// symbol (nothing at all if it's empty), and clicking it - see the
-/// `powermenu` handler - opens an xmenu of `items`.
+/// `powermenu` handler - opens a menu of `items`.
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 pub struct PowerMenu {
     #[serde(default)]
@@ -187,12 +187,15 @@ pub struct PowerMenu {
     pub items: Vec<PowerMenuItem>,
 }
 
-/// One `PowerMenu` entry: xmenu shows `label`, and picking it runs
+/// One `PowerMenu` entry: the menu shows `label`, and picking it runs
 /// `command` through `sh -c`.
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct PowerMenuItem {
     pub label: String,
     pub command: String,
+    /// fleximenu highlight color for this entry, like `Layout::color`
+    #[serde(default)]
+    pub color: String,
 }
 
 pub struct Systray {
@@ -257,6 +260,10 @@ pub struct Layout {
     pub symbol: String,
     #[serde(default)]
     pub arrange: Option<LayoutFn>,
+    /// fleximenu highlight color for this layout's entry in the layout
+    /// menu (one of r g y b p h s, or empty for none) - see `Config::menu`
+    #[serde(default)]
+    pub color: String,
 }
 
 /// Per-tag/per-monitor gap configuration, matching flexiflow's vanitygaps
