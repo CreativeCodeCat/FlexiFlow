@@ -295,7 +295,17 @@ mod tests {
 
     #[test]
     fn from_lua() {
-        let got = Config::from_lua("testfiles/config.lua").unwrap();
+        // an empty config file layered on the embedded default, so this
+        // snapshots the default config as loaded from disk
+        let dir = std::env::temp_dir()
+            .join(format!("flexiflow-config-from-lua-{}", std::process::id()));
+        let path = dir.join("config.lua");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(&path, "").unwrap();
+
+        let got = Config::from_lua(&path).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
         assert_debug_snapshot!(got)
     }
 
