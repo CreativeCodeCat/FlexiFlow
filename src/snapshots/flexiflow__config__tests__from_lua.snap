@@ -1080,6 +1080,30 @@ Config {
         },
         Key {
             mod_: 64,
+            keysym: 98,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+            desc: "Toggle the bar",
+            group: "bar",
+        },
+        Key {
+            mod_: 64,
+            keysym: 119,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+            desc: "Show/hide unused tags",
+            group: "bar",
+        },
+        Key {
+            mod_: 64,
             keysym: 47,
             func: Some(
                 "[func]",
@@ -2337,6 +2361,7 @@ Config {
     ],
     hotkeys_groups: [
         "flexiflow",
+        "bar",
         "tag",
         "client",
         "layout",

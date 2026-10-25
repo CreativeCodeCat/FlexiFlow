@@ -28,8 +28,8 @@ use crate::{
     key_handlers::setlayout,
     manage, recttomon, removesystrayicon, resizebarwin, resizeclient, restack,
     sendevent, setclientstate, setfocus, setfullscreen, sethovertag, seturgent,
-    status_textw, swallowingclient, textw, unfocus, unmanage, updatebars,
-    updategeom, updatesizehints, updatestatus, updatesystray,
+    status_textw, swallowingclient, tagshown, textw, unfocus, unmanage,
+    updatebars, updategeom, updatesizehints, updatestatus, updatesystray,
     updatesystrayicongeom, updatesystrayiconstate, updatetitle,
     updatewindowtype, updatewmhints, width, wintoclient, wintomon,
     wintosystrayicon,
@@ -53,11 +53,15 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
             crate::focus(state, null_mut());
         }
         if ev.window == (*state.selmon).barwin {
-            let x: i32 = state
-                .config
-                .tags
-                .iter()
-                .map(|tag| textw(&mut state.drw, tag, state.lrpad))
+            let selmon = state.selmon;
+            let shown: Vec<usize> = (0..state.config.tags.len())
+                .filter(|&i| tagshown(state, selmon, i))
+                .collect();
+            let x: i32 = shown
+                .into_iter()
+                .map(|i| {
+                    textw(&mut state.drw, &state.config.tags[i], state.lrpad)
+                })
                 .sum();
             let ltw =
                 textw(&mut state.drw, &(*state.selmon).ltsymbol, state.lrpad);
@@ -72,7 +76,7 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                     state.lrpad,
                 )
             };
-            if let Some(i) = bartag_at(state, ev.x) {
+            if let Some(i) = bartag_at(state, state.selmon, ev.x) {
                 click = Clk::TagBar;
                 arg = Arg::Ui(1 << i);
             } else if ev.x < x + ltw {
@@ -588,7 +592,7 @@ pub(crate) fn motionnotify(state: &mut State, e: *mut XEvent) {
         let ev = &(*e).motion;
         let bm = bartomon(state, ev.window);
         if !bm.is_null() {
-            let tag = bartag_at(state, ev.x);
+            let tag = bartag_at(state, bm, ev.x);
             sethovertag(state, bm, tag);
             return;
         }

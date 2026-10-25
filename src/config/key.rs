@@ -90,6 +90,7 @@ pub(crate) static FUNC_MAP: LazyLock<FnMap> = LazyLock::new(|| {
         ("tagview", tagview as FN),
         ("tagmon", tagmon as FN),
         ("togglebar", togglebar as FN),
+        ("togglevacant", togglevacant as FN),
         ("togglefloating", togglefloating as FN),
         ("toggletag", toggletag as FN),
         ("toggleview", toggleview as FN),

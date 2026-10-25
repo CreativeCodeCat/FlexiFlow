@@ -64,6 +64,9 @@ pub struct State {
     /// Bar colors for a tag under the pointer, one per tag: its accent on
     /// a tint of that accent over the bar background.
     pub hoverscheme: Vec<Vec<Clr>>,
+    /// Whether the bar leaves out tags with no windows that aren't in
+    /// view (`togglevacant`).
+    pub hidevacant: bool,
     pub screen: c_int,
     pub root: Window,
     /// sum of left and right padding for text

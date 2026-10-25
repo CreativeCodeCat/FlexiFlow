@@ -17,15 +17,21 @@ use x11::xlib::{
 use crate::config::key::Key;
 use crate::core::{
     HANDLER, MOUSEMASK, XNONE, arrange, attach, attachstack, detach,
-    detachstack, drawbar, focus, getrootptr, height, is_visible, nexttiled,
-    pop, recttomon, resize, resizebarwin, restack, sendevent, setfullscreen,
-    textw, unfocus, updatebarpos, width, xerror, xerrordummy,
+    detachstack, drawbar, drawbars, focus, getrootptr, height, is_visible,
+    nexttiled, pop, recttomon, resize, resizebarwin, restack, sendevent,
+    setfullscreen, textw, unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::drw;
 use crate::enums::{Col, Scheme, WM};
 use crate::util::{restart_exe, spawn_child};
 use crate::{Arg, Client, Gaps, Layout, Monitor, PowerMenuItem};
 use crate::{State, cfor};
+
+/// Shows or hides the bar's tags that have no windows and aren't in view.
+pub(crate) fn togglevacant(state: &mut State, _arg: *const Arg) {
+    state.hidevacant = !state.hidevacant;
+    drawbars(state);
+}
 
 pub(crate) fn togglebar(state: &mut State, _arg: *const Arg) {
     unsafe {

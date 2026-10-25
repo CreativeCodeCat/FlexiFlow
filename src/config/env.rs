@@ -35,9 +35,9 @@ macro_rules! clicks {
     }
 }
 
-pub(super) static HANDLERS: [(&str, &str); 50] = handler_fns! {
+pub(super) static HANDLERS: [(&str, &str); 51] = handler_fns! {
     focusmon, focusstack, pushstack, incnmaster, killclient, quit, restart, setlayout, setmfact,
-    spawn, tag, tagview, tagmon, togglebar, togglefloating, toggletag, toggleview,
+    spawn, tag, tagview, tagmon, togglebar, togglevacant, togglefloating, toggletag, toggleview,
     view, zoom, movemouse, resizemouse, fullscreen,
     togglescratch,
     // key handlers added for flexiflow's config (gaps / cfact / layout cycling)

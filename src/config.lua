@@ -779,6 +779,22 @@ keys = {
         "media"
     ),
 
+    -- the bar, and its tags with no windows
+    key(
+        modkey, XK_b, togglebar, {
+            I = 0,
+        },
+        "Toggle the bar",
+        "bar"
+    ),
+    key(
+        modkey, XK_w, togglevacant, {
+            I = 0,
+        },
+        "Show/hide unused tags",
+        "bar"
+    ),
+
     -- every keybinding that has a description, listed in `menu`
     key(
         modkey, XK_slash, hotkeys, {
@@ -1080,6 +1096,7 @@ flexiflow = {
     -- listed follow in the order they're first bound
     hotkeys_groups = {
         "flexiflow",
+        "bar",
         "tag",
         "client",
         "layout",

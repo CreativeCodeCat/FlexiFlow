@@ -264,6 +264,7 @@ pub fn setup(dpy: *mut Display) -> State {
             scheme: Default::default(),
             tagscheme: Vec::new(),
             hoverscheme: Vec::new(),
+            hidevacant: false,
             screen,
             root,
             wmcheckwin: xlib::XCreateSimpleWindow(
@@ -1545,15 +1546,40 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
 const HOVER_TINT: f32 = 0.3;
 
 /// The index of the tag drawn at `x` in a bar, if any.
-pub fn bartag_at(state: &mut State, x: c_int) -> Option<usize> {
+pub fn bartag_at(
+    state: &mut State,
+    m: *mut Monitor,
+    x: c_int,
+) -> Option<usize> {
     let mut end = 0;
     for (i, tag) in state.config.tags.iter().enumerate() {
+        if !tagshown(state, m, i) {
+            continue;
+        }
         end += textw(&mut state.drw, tag, state.lrpad);
         if x < end {
             return Some(i);
         }
     }
     None
+}
+
+/// Whether `m`'s bar shows tag `i`: always, unless `hidevacant` leaves
+/// out the tags with no windows that aren't in view.
+pub fn tagshown(state: &State, m: *mut Monitor, i: usize) -> bool {
+    unsafe {
+        if !state.hidevacant || (*m).tagset[(*m).seltags] & (1 << i) != 0 {
+            return true;
+        }
+        let mut c = (*m).clients;
+        while !c.is_null() {
+            if (*c).tags & (1 << i) != 0 {
+                return true;
+            }
+            c = (*c).next;
+        }
+        false
+    }
 }
 
 /// Highlight `tag` (or nothing) in `m`'s bar as the one under the
@@ -1609,6 +1635,9 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
 
         let mut x = 0;
         for (i, tag) in state.config.tags.iter().enumerate() {
+            if !tagshown(state, m, i) {
+                continue;
+            }
             let text = tag.to_owned();
             let w = textw(&mut state.drw, &text, state.lrpad);
             let selected = ((*m).tagset[(*m).seltags] & (1 << i)) != 0;

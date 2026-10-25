@@ -125,6 +125,8 @@ highlights - see `src/config.lua` for the complete list:
 | `s_mod` + `,`/`.` | Move focused window to previous/next monitor |
 | Alt + `Return`/`b` | Toggle a scratchpad terminal/btop |
 | `modkey` + `Return` | Spawn a terminal |
+| `modkey` + `b` | Show/hide the bar |
+| `modkey` + `w` | Show/hide the bar's tags that have no windows and aren't in view |
 | `modkey` + `/` | Show a popup of every keybinding that has a description |
 | `s_mod` + `r` | Quit |
 | `Alt+Ctrl` + `r` | Restart in place (reloads the binary and config) |
