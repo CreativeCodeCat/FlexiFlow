@@ -1076,6 +1076,21 @@ flexiflow = {
         },
     },
 
+    -- the order of the keybindings popup's (MOD+/) groups; any not
+    -- listed follow in the order they're first bound
+    hotkeys_groups = {
+        "flexiflow",
+        "tag",
+        "client",
+        "layout",
+        "screen",
+        "launcher",
+        "scratchpad",
+        "screenshot",
+        "media",
+        "gaps",
+    },
+
     -- the menu program the layout and power menus open (dmenu-style: one
     -- item per line in, the picked line out); FlexiFlow adds `-p <prompt>`
     -- and `-l <number of items>`. These are fleximenu's flags: -M opens

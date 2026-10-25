@@ -2335,4 +2335,16 @@ Config {
         "-z",
         "222",
     ],
+    hotkeys_groups: [
+        "flexiflow",
+        "tag",
+        "client",
+        "layout",
+        "screen",
+        "launcher",
+        "scratchpad",
+        "screenshot",
+        "media",
+        "gaps",
+    ],
 }

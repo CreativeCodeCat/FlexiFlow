@@ -467,7 +467,7 @@ const HOTKEYS_TITLE: &str = "Keybindings";
 /// itself, as `movemouse` does, still handling map, configure and
 /// expose requests meanwhile.
 pub(crate) fn hotkeys(state: &mut State, _arg: *const Arg) {
-    let lines = hotkey_lines(&state.config.keys);
+    let lines = hotkey_lines(&state.config.keys, &state.config.hotkeys_groups);
     if lines.is_empty() {
         return;
     }
@@ -694,10 +694,10 @@ enum HotkeyLine<'a> {
 }
 
 /// Every described key under its group's heading, the groups in the
-/// order they're first bound, and keys without a group last under
-/// "other". Keys that share their group, modifiers and description,
+/// order `order` lists them and then in the order they're first bound,
+/// and keys without a group last under "other". Keys that share their group, modifiers and description,
 /// like the tag keys, share a line: `Super+1..0`.
-fn hotkey_lines(keys: &[Key]) -> Vec<HotkeyLine<'_>> {
+fn hotkey_lines<'a>(keys: &'a [Key], order: &[String]) -> Vec<HotkeyLine<'a>> {
     let mut groups: Vec<(&str, Vec<(c_uint, &str, Vec<String>)>)> = Vec::new();
     let described = keys.iter().filter(|k| !k.desc.is_empty());
     for key in described
@@ -722,6 +722,10 @@ fn hotkey_lines(keys: &[Key]) -> Vec<HotkeyLine<'_>> {
             None => rows.push((key.mod_, &key.desc, vec![name])),
         }
     }
+    // stable, so unlisted groups keep their order after the listed ones
+    groups.sort_by_key(|(g, _)| {
+        order.iter().position(|o| o == g).unwrap_or(order.len())
+    });
     let mut lines = Vec::new();
     for (i, (group, rows)) in groups.into_iter().enumerate() {
         lines.push(HotkeyLine::Group(i, group));
@@ -1442,7 +1446,7 @@ mod tests {
             described(Mod4Mask, XK_m, "Run a program", "launcher"),
         ];
         assert_eq!(
-            hotkey_lines(&keys),
+            hotkey_lines(&keys, &[]),
             [
                 HotkeyLine::Group(0, "launcher"),
                 HotkeyLine::Key(0, "Super+Return".into(), "Open a terminal"),
@@ -1463,7 +1467,7 @@ mod tests {
             described(Mod4Mask, XK_0, "View tag", "tag"),
         ];
         assert_eq!(
-            hotkey_lines(&keys),
+            hotkey_lines(&keys, &[]),
             [
                 HotkeyLine::Group(0, "tag"),
                 HotkeyLine::Key(0, "Super+1..0".into(), "View tag"),
@@ -1471,6 +1475,25 @@ mod tests {
                 HotkeyLine::Key(1, "AudioPlay".into(), "Play"),
             ]
         );
+    }
+
+    #[test]
+    fn hotkey_lines_put_the_listed_groups_first() {
+        use x11::keysym::{XK_a, XK_b, XK_c};
+        let keys = vec![
+            described(Mod4Mask, XK_a, "A", "apps"),
+            described(Mod4Mask, XK_b, "B", "tag"),
+            described(Mod4Mask, XK_c, "C", "flexiflow"),
+        ];
+        let order = ["flexiflow".to_string(), "tag".to_string()];
+        let groups: Vec<_> = hotkey_lines(&keys, &order)
+            .into_iter()
+            .filter_map(|l| match l {
+                HotkeyLine::Group(_, g) => Some(g),
+                HotkeyLine::Key(..) => None,
+            })
+            .collect();
+        assert_eq!(groups, ["flexiflow", "tag", "apps"]);
     }
 
     #[test]

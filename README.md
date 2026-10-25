@@ -143,7 +143,9 @@ A keybinding's optional fifth and sixth arguments, `key(mod, keysym,
 func, arg, "Open a terminal", "launcher")`, describe it for the
 `modkey` + `/` popup, like awesome's hotkeys popup: each group gets a
 heading in the next tag's accent, keys sharing their modifiers and
-description share a line, and any key or click closes it.
+description share a line, and any key or click closes it. The groups
+come in the order `hotkeys_groups` lists them (`flexiflow` first by
+default), then any others in the order they're first bound.
 
 Both menus run the `menu` command from `src/config.lua`, which is
 [fleximenu](https://github.com/CreativeCodeCat/FlexiMenu) by default; any

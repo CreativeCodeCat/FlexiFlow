@@ -206,6 +206,10 @@ pub struct Config {
     /// of items>` are added for each menu.
     #[serde(default = "default_menu")]
     pub menu: Vec<String>,
+    /// The order of the `hotkeys` popup's groups; groups not listed
+    /// follow in the order they're first bound.
+    #[serde(default)]
+    pub hotkeys_groups: Vec<String>,
 }
 
 fn default_menu() -> Vec<String> {
