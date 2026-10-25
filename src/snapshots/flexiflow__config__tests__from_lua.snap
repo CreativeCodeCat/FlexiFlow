@@ -52,9 +52,9 @@ Config {
                 "#CC3333",
             ],
             [
-                "#283036",
-                "#A165E8",
-                "#A165E8",
+                "#FCFCFC",
+                "#5C6670",
+                "#5C6670",
             ],
             [
                 "#FF59F9",
@@ -2366,7 +2366,7 @@ Config {
             },
         ],
     },
-    menubutton: "\u{f0c9}",
+    menubutton: "\u{f003b}",
     menu: [
         "fleximenu",
         "--fn",
