@@ -1317,12 +1317,7 @@ pub(crate) fn resizemouse(state: &mut State, _arg: *const Arg) {
 
 pub(crate) fn spawn(state: &mut State, arg: *const Arg) {
     unsafe {
-        let mut argv = (*arg).v();
-        if argv == *state.config.dmenucmd {
-            log::trace!("spawn: dmenucmd on monitor {}", (*state.selmon).num);
-            argv.push("-m".into());
-            argv.push((*state.selmon).num.to_string());
-        }
+        let argv = (*arg).v();
 
         (*state.selmon).tagset[(*state.selmon).seltags] &= !state.scratch_mask();
 

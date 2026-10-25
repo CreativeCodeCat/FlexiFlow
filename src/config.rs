@@ -163,8 +163,6 @@ pub struct Config {
 
     pub keys: Vec<Key>,
 
-    pub dmenucmd: Vec<String>,
-
     pub rules: Vec<Rule>,
 
     /// Swallow floating windows by default

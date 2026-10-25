@@ -1744,9 +1744,6 @@ Config {
             group: "tag",
         },
     ],
-    dmenucmd: [
-        "menu",
-    ],
     rules: [
         Rule {
             class: "Alacritty",

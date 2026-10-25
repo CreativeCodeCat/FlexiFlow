@@ -893,7 +893,6 @@ flexiflow = {
     },
     tagcolors = tagcolors(foreground, tag_accents),
     keys = keys,
-    dmenucmd = menucmd,
     rules = {
         -- tag assignment, ported from flexiflow's old rules.rs (all switch
         -- view to the tag on match, like the original `switch_to_tag: true`)
