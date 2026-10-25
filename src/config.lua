@@ -1108,11 +1108,9 @@ flexiflow = {
     },
 
     -- the keybindings popup (MOD+/): its colors, and its groups in the
-    -- order they're shown, each with a heading and an accent. Accents
-    -- follow what the keys do - blue for windows, purple for FlexiFlow
-    -- itself, green for apps, orange for media. Groups not listed follow
-    -- in the order they're first bound, with an accent of their own.
-    -- The colors are KDE's Breeze Dark
+    -- order they're shown, each with a heading and an accent of its own.
+    -- Groups not listed follow in the order they're first bound, with
+    -- an accent from the same palette. The colors are KDE's Breeze Dark
     hotkeys = {
         bg = "#202326",
         fg = "#FCFCFC",
@@ -1126,13 +1124,13 @@ flexiflow = {
             { name = "launcher", label = "Apps & Launchers", color = "#27AE60" },
             { name = "client", label = "Windows", color = "#3DAEE9" },
             { name = "flexiflow", label = "System", color = "#9B59B6" },
-            { name = "layout", label = "Layouts", color = "#3DAEE9" },
-            { name = "tag", label = "Tags", color = "#3DAEE9" },
-            { name = "screen", label = "Monitors", color = "#3DAEE9" },
-            { name = "gaps", label = "Gaps", color = "#3DAEE9" },
-            { name = "scratchpad", label = "Scratchpads", color = "#27AE60" },
-            { name = "screenshot", label = "Screenshots", color = "#27AE60" },
-            { name = "bar", label = "Bar", color = "#9B59B6" },
+            { name = "layout", label = "Layouts", color = "#1ABC9C" },
+            { name = "tag", label = "Tags", color = "#FDBC4B" },
+            { name = "screen", label = "Monitors", color = "#2980B9" },
+            { name = "gaps", label = "Gaps", color = "#C9CE3B" },
+            { name = "scratchpad", label = "Scratchpads", color = "#E93A9A" },
+            { name = "screenshot", label = "Screenshots", color = "#DA4453" },
+            { name = "bar", label = "Bar", color = "#A1A9B1" },
             { name = "media", label = "Media", color = "#F67400" },
         },
     },

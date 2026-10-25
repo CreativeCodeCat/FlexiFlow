@@ -2403,37 +2403,37 @@ Config {
             HotkeyGroup {
                 name: "layout",
                 label: "Layouts",
-                color: "#3DAEE9",
+                color: "#1ABC9C",
             },
             HotkeyGroup {
                 name: "tag",
                 label: "Tags",
-                color: "#3DAEE9",
+                color: "#FDBC4B",
             },
             HotkeyGroup {
                 name: "screen",
                 label: "Monitors",
-                color: "#3DAEE9",
+                color: "#2980B9",
             },
             HotkeyGroup {
                 name: "gaps",
                 label: "Gaps",
-                color: "#3DAEE9",
+                color: "#C9CE3B",
             },
             HotkeyGroup {
                 name: "scratchpad",
                 label: "Scratchpads",
-                color: "#27AE60",
+                color: "#E93A9A",
             },
             HotkeyGroup {
                 name: "screenshot",
                 label: "Screenshots",
-                color: "#27AE60",
+                color: "#DA4453",
             },
             HotkeyGroup {
                 name: "bar",
                 label: "Bar",
-                color: "#9B59B6",
+                color: "#A1A9B1",
             },
             HotkeyGroup {
                 name: "media",
