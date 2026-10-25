@@ -2377,6 +2377,10 @@ Config {
         "-z",
         "222",
     ],
+    statusclick: [
+        "flexiflow_bar",
+        "--click",
+    ],
     hotkeys: Hotkeys {
         bg: "#202326",
         fg: "#FCFCFC",

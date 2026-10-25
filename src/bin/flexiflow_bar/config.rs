@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use mlua::LuaSerdeExt as _;
 
@@ -21,6 +21,35 @@ pub struct BarConfig {
     pub font: String,
     pub colors: Colors,
     pub segments: Vec<String>,
+    /// what clicking each segment's chips runs, by segment name
+    #[serde(default)]
+    pub clicks: HashMap<String, Clicks>,
+}
+
+/// The `sh -c` commands a segment's chips run when clicked or scrolled
+/// on; an empty one does nothing.
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[serde(default)]
+pub struct Clicks {
+    pub left: String,
+    pub middle: String,
+    pub right: String,
+    pub scroll_up: String,
+    pub scroll_down: String,
+}
+
+impl Clicks {
+    /// The command for X mouse `button` 1-5.
+    pub fn command(&self, button: u32) -> &str {
+        match button {
+            1 => &self.left,
+            2 => &self.middle,
+            3 => &self.right,
+            4 => &self.scroll_up,
+            5 => &self.scroll_down,
+            _ => "",
+        }
+    }
 }
 
 const DEFAULT_LUA: &str = include_str!("bar.lua");
@@ -90,6 +119,8 @@ mod tests {
         let cfg = from_lua_source(DEFAULT_LUA).unwrap();
         assert_eq!(cfg.interval_ms, 500);
         assert_eq!(cfg.colors.accents.len(), 7);
+        assert_eq!(cfg.clicks["volume"].command(1), "pavucontrol");
+        assert_eq!(cfg.clicks["volume"].command(9), "");
         assert_eq!(
             cfg.segments,
             vec![
@@ -97,6 +128,18 @@ mod tests {
                 "desktop", "network", "volume", "clock"
             ]
         );
+    }
+
+    #[test]
+    fn clicks_may_be_empty_or_left_out() {
+        let base = "interval_ms = 1, colors = { fg = '', accents = {} }, \
+                    segments = {}";
+        for src in [
+            format!("return {{ {base} }}"),
+            format!("return {{ {base}, clicks = {{}} }}"),
+        ] {
+            assert!(from_lua_source(&src).unwrap().clicks.is_empty());
+        }
     }
 
     #[test]

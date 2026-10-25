@@ -94,6 +94,14 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                     - getsystraywidth(state) as i32
             {
                 click = Clk::StatusText;
+                if let Some((.., name)) = state
+                    .statusareas
+                    .iter()
+                    .find(|(start, end, _)| (*start..*end).contains(&ev.x))
+                {
+                    statusclick(state, &name.clone(), ev.button);
+                    return;
+                }
             } else {
                 click = Clk::WinTitle;
             }
@@ -124,6 +132,19 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                 f(state, a)
             }
         }
+    }
+}
+
+/// Runs `Config::statusclick` for a click with `button` on the status
+/// text's area called `name`.
+fn statusclick(state: &State, name: &str, button: c_uint) {
+    let Some((program, args)) = state.config.statusclick.split_first() else {
+        return;
+    };
+    let mut cmd = std::process::Command::new(program);
+    cmd.args(args).arg(name).arg(button.to_string());
+    if let Err(e) = crate::util::spawn_child(&mut cmd) {
+        log::warn!("statusclick: failed to spawn {program:?}: {e}");
     }
 }
 

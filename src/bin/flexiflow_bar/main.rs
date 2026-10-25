@@ -1,6 +1,9 @@
 //! flexiflow_bar: feeds FlexiFlow's status bar by running `FlexiFlow -b`
 //! with the rendered text every tick, using the same inline
 //! `^c#hex^`/`^b#hex^`/`^d^` color codes `core.rs`'s `drawbar` parses.
+//!
+//! `flexiflow_bar --click <segment> <button>`, which FlexiFlow runs when
+//! a chip is clicked, runs that segment's `clicks` command instead.
 
 mod config;
 mod segments;
@@ -61,6 +64,21 @@ fn status_text(font: &str, chips: &[String]) -> String {
     }
 }
 
+/// Runs `segment`'s `clicks` command for mouse `button`, if it has one.
+fn click(segment: &str, button: u32) {
+    let cfg = config::load();
+    let Some(command) = cfg.clicks.get(segment).map(|c| c.command(button))
+    else {
+        return;
+    };
+    if command.is_empty() {
+        return;
+    }
+    if let Err(e) = Command::new("sh").args(["-c", command]).spawn() {
+        log::warn!("flexiflow_bar: cannot run {command:?}: {e}");
+    }
+}
+
 /// Only one instance should be driving the status text at a time -
 /// SIGTERM any other `flexiflow_bar` process (e.g. a leftover from a
 /// previous session, or a duplicate autostart).
@@ -95,6 +113,14 @@ fn main() {
     unsafe {
         libc::signal(libc::SIGCHLD, libc::SIG_DFL);
     }
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [flag, segment, button] = args.as_slice()
+        && flag == "--click"
+    {
+        click(segment, button.parse().unwrap_or(0));
+        return;
+    }
+
     kill_other_instances();
 
     let cfg = config::load();
@@ -114,7 +140,10 @@ fn main() {
             } else {
                 &cfg.colors.accents[i % cfg.colors.accents.len()]
             };
+            // chips of segments with `clicks` name their click area
+            let area = if cfg.clicks.contains_key(name) { name } else { "" };
             for (icon, label) in pairs {
+                chips.push(format!("^a{area}^"));
                 chips.push(render_chip(
                     &cfg.colors.fg,
                     accent,

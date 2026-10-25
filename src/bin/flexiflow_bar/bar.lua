@@ -51,6 +51,24 @@ return {
     },
     -- any of: updates, kernel, battery, ram, cpu, keyboard, desktop,
     -- network, volume, clock - reorder, drop, or repeat as you like.
+    -- what clicking a segment's chips runs, through `sh -c`: any of
+    -- left, middle, right, scroll_up and scroll_down. Segments listed
+    -- here take their clicks; elsewhere on the status text, FlexiFlow's
+    -- own ClkStatusText bindings apply
+    clicks = {
+        updates = {
+            left = "${TERMINAL:-alacritty} -e arch-update",
+        },
+        volume = {
+            left = "pavucontrol",
+            middle = "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+            scroll_up = "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+            scroll_down = "pactl set-sink-volume @DEFAULT_SINK@ -5%",
+        },
+        network = {
+            left = "nm-connection-editor",
+        },
+    },
     segments = {
         "updates",
         "kernel",

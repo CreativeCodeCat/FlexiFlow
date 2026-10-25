@@ -265,6 +265,7 @@ pub fn setup(dpy: *mut Display) -> State {
             tagscheme: Vec::new(),
             hoverscheme: Vec::new(),
             statusfonts: Default::default(),
+            statusareas: Vec::new(),
             hidevacant: false,
             screen,
             root,
@@ -1462,24 +1463,36 @@ struct StatusBox {
     color: String,
 }
 
-/// Split `text` on inline color codes - `^c#RRGGBB^` sets the
-/// foreground, `^b#RRGGBB^` the background, `^d^` resets both to
-/// `norm_fg`/`norm_bg` - into `(text, fg, bg)` runs, and the boxes around
-/// them: `^o#RRGGBB^` starts a box bordered in that color (ending any box
-/// already open), and `^o^` ends it, as does the end of `text`. The third
-/// part is each run's font: `^f<font>^` sets it, say `^fMonospace:size=9^`,
-/// and `^f^` goes back to the bar's own (`None`).
+/// Status text split up by `parse_status`.
+#[derive(Debug, Default)]
+struct ParsedStatus {
+    /// `(text, fg, bg)` runs
+    runs: Vec<StatusRun>,
+    /// borders around runs
+    boxes: Vec<StatusBox>,
+    /// each run's font; `None` for the bar's own
+    fonts: Vec<Option<String>>,
+    /// each run's click area, by name; `None` outside any
+    areas: Vec<Option<String>>,
+}
+
+/// Split `text` on inline codes into runs:
+///
+/// - `^c#RRGGBB^` sets the foreground and `^b#RRGGBB^` the background;
+///   `^d^` resets both to `norm_fg`/`norm_bg`
+/// - `^o#RRGGBB^` starts a box bordered in that color, ending any box
+///   already open; `^o^` ends it, as does the end of `text`
+/// - `^f<font>^` draws the runs after it in that font, say
+///   `^fMonospace:size=9^`; `^f^` goes back to the bar's own
+/// - `^a<name>^` makes the runs after it a click area called `name`
+///   (see `Config::statusclick`); `^a^` ends it
+///
 /// Unrecognized codes are dropped silently. `flexiflow_bar` (and this
 /// fork's `-b` flag) produce text in this format.
-fn parse_status(
-    text: &str,
-    norm_fg: &str,
-    norm_bg: &str,
-) -> (Vec<StatusRun>, Vec<StatusBox>, Vec<Option<String>>) {
-    let mut segs: Vec<StatusRun> = vec![];
-    let mut fonts: Vec<Option<String>> = vec![];
+fn parse_status(text: &str, norm_fg: &str, norm_bg: &str) -> ParsedStatus {
+    let mut parsed = ParsedStatus::default();
     let mut font: Option<String> = None;
-    let mut boxes: Vec<StatusBox> = vec![];
+    let mut area: Option<String> = None;
     let mut open: Option<(usize, String)> = None;
     let (mut fg, mut bg) = (norm_fg.to_string(), norm_bg.to_string());
     let mut buf = String::new();
@@ -1493,6 +1506,7 @@ fn parse_status(
             boxes.push(StatusBox { start, end, color });
         }
     };
+    let named = |name: &str| (!name.is_empty()).then(|| name.to_string());
     while let Some(c) = chars.next() {
         if c != '^' {
             buf.push(c);
@@ -1500,31 +1514,35 @@ fn parse_status(
         }
         let code: String = chars.by_ref().take_while(|&c| c != '^').collect();
         if !buf.is_empty() {
-            segs.push((std::mem::take(&mut buf), fg.clone(), bg.clone()));
-            fonts.push(font.clone());
+            let run = (std::mem::take(&mut buf), fg.clone(), bg.clone());
+            parsed.runs.push(run);
+            parsed.fonts.push(font.clone());
+            parsed.areas.push(area.clone());
         }
+        let end = parsed.runs.len();
         if let Some(hex) = code.strip_prefix('c') {
             fg = hex.to_string();
         } else if let Some(hex) = code.strip_prefix('b') {
             bg = hex.to_string();
         } else if let Some(hex) = code.strip_prefix('o') {
-            close(&mut open, &mut boxes, segs.len());
-            if !hex.is_empty() {
-                open = Some((segs.len(), hex.to_string()));
-            }
+            close(&mut open, &mut parsed.boxes, end);
+            open = named(hex).map(|color| (end, color));
         } else if let Some(name) = code.strip_prefix('f') {
-            font = (!name.is_empty()).then(|| name.to_string());
+            font = named(name);
+        } else if let Some(name) = code.strip_prefix('a') {
+            area = named(name);
         } else if code == "d" {
             fg = norm_fg.to_string();
             bg = norm_bg.to_string();
         }
     }
     if !buf.is_empty() {
-        segs.push((buf, fg, bg));
-        fonts.push(font);
+        parsed.runs.push((buf, fg, bg));
+        parsed.fonts.push(font);
+        parsed.areas.push(area);
     }
-    close(&mut open, &mut boxes, segs.len());
-    (segs, boxes, fonts)
+    close(&mut open, &mut parsed.boxes, parsed.runs.len());
+    parsed
 }
 
 /// Pixel width of `state.stext` as `draw_status2d` draws it, i.e. with
@@ -1532,7 +1550,8 @@ fn parse_status(
 /// measures them as literal text, which for flexiflow_bar's output comes
 /// out wider than the whole screen.
 pub fn status_textw(state: &mut State) -> c_int {
-    let (segs, boxes, fonts) = parse_status(&state.stext, "", "");
+    let ParsedStatus { runs: segs, boxes, fonts, .. } =
+        parse_status(&state.stext, "", "");
     let widths: Vec<c_int> = segs
         .iter()
         .zip(&fonts)
@@ -1617,7 +1636,7 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     let norm = &state.config.colors.0[Scheme::Norm as usize];
     let norm_fg = norm[Col::Fg as usize].to_string_lossy().into_owned();
     let norm_bg = norm[Col::Bg as usize].to_string_lossy().into_owned();
-    let (segs, boxes, fonts) =
+    let ParsedStatus { runs: segs, boxes, fonts, areas } =
         parse_status(&state.stext, &norm_fg, &norm_bg);
 
     let raw_widths: Vec<c_int> = segs
@@ -1640,6 +1659,14 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     drw::rect(&mut state.drw, x_end - tw, 0, tw as c_uint, h, true, true);
 
     let x0 = x_end - tw + (state.lrpad / 2 - 2).max(0);
+    state.statusareas = areas
+        .iter()
+        .enumerate()
+        .filter_map(|(i, area)| {
+            let x = x0 + xs[i];
+            area.as_ref().map(|name| (x, x + raw_widths[i], name.clone()))
+        })
+        .collect();
     let boxed = |i: usize| boxes.iter().any(|b| (b.start..b.end).contains(&i));
     for (i, ((text, fg, bg), &w)) in segs.iter().zip(&raw_widths).enumerate() {
         let (y, rh) = if boxed(i) {
@@ -3364,20 +3391,23 @@ pub fn getstate(state: &mut State, w: Window) -> c_long {
 
 #[cfg(test)]
 mod status2d_tests {
-    use super::{StatusBox, StatusRun, parse_status, status_layout};
+    use super::{
+        ParsedStatus, StatusBox, StatusRun, parse_status, status_layout,
+    };
 
     fn parse_status_segments(
         text: &str,
         norm_fg: &str,
         norm_bg: &str,
     ) -> Vec<StatusRun> {
-        parse_status(text, norm_fg, norm_bg).0
+        parse_status(text, norm_fg, norm_bg).runs
     }
 
     #[test]
     fn o_boxes_the_runs_until_the_next_o() {
         let text = "^o#111111^^b#222222^a^b#333333^b^o#444444^c^o^d";
-        let (segs, boxes, _) = parse_status(text, "#000000", "#ffffff");
+        let ParsedStatus { runs: segs, boxes, .. } =
+            parse_status(text, "#000000", "#ffffff");
         assert_eq!(segs.len(), 4);
         assert_eq!(
             boxes,
@@ -3403,14 +3433,22 @@ mod status2d_tests {
 
     #[test]
     fn f_sets_the_font_of_the_runs_after_it() {
-        let (_, _, fonts) =
-            parse_status("a^fMono:size=9^b^f^c", "#000000", "#ffffff");
+        let text = "a^fMono:size=9^b^f^c";
+        let fonts = parse_status(text, "#000000", "#ffffff").fonts;
         assert_eq!(fonts, [None, Some("Mono:size=9".to_string()), None]);
     }
 
     #[test]
+    fn a_names_the_click_area_of_the_runs_after_it() {
+        let text = "a^avolume^b^c#111111^c^a^d";
+        let areas = parse_status(text, "#000000", "#ffffff").areas;
+        let volume = Some("volume".to_string());
+        assert_eq!(areas, [None, volume.clone(), volume, None]);
+    }
+
+    #[test]
     fn an_unclosed_box_ends_with_the_text() {
-        let (_, boxes, _) = parse_status("^o#111111^a", "#000000", "#ffffff");
+        let boxes = parse_status("^o#111111^a", "#000000", "#ffffff").boxes;
         assert_eq!(
             boxes,
             vec![StatusBox { start: 0, end: 1, color: "#111111".into() }]

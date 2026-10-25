@@ -210,6 +210,13 @@ pub struct Config {
     /// of items>` are added for each menu.
     #[serde(default = "default_menu")]
     pub menu: Vec<String>,
+    /// The command run when a named area of the status text
+    /// (`^a<name>^`) is clicked, with the area's name and the mouse
+    /// button (1-5) added: `flexiflow_bar --click volume 1`, by default.
+    /// The click doesn't go on to the `ClkStatusText` bindings.
+    #[serde(default = "default_statusclick")]
+    pub statusclick: Vec<String>,
+
     /// The `hotkeys` popup's colors and groups - see `Hotkeys`.
     #[serde(default)]
     pub hotkeys: Hotkeys,
@@ -217,6 +224,10 @@ pub struct Config {
     /// `hotkeys.groups` lists; kept for older configs.
     #[serde(default)]
     pub hotkeys_groups: Vec<String>,
+}
+
+fn default_statusclick() -> Vec<String> {
+    vec!["flexiflow_bar".to_string(), "--click".to_string()]
 }
 
 fn default_menu() -> Vec<String> {

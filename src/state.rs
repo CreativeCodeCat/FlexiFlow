@@ -67,6 +67,9 @@ pub struct State {
     /// Fonts the status text asked for with `^f<font>^`, by name, loaded
     /// on first use; `None` for one that wouldn't load.
     pub statusfonts: std::collections::HashMap<String, Option<Vec<drw::Fnt>>>,
+    /// Where the status text's click areas (`^a<name>^`) were last
+    /// drawn, from x to x in the bar, by name.
+    pub statusareas: Vec<(c_int, c_int, String)>,
     /// Whether the bar leaves out tags with no windows that aren't in
     /// view (`togglevacant`).
     pub hidevacant: bool,
