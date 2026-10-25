@@ -14,6 +14,8 @@ pub enum Scheme {
     Layout,
     /// the bar's power button
     Power,
+    /// the bar's menu button, left of the tags
+    Menu,
     /// the focused window's title in the bar
     Title,
 }
@@ -29,6 +31,8 @@ pub enum Clk {
     RootWin,
     /// `Config::powermenu`'s symbol, right after the layout symbol
     PowerButton,
+    /// `Config::menubutton`, left of the tags
+    MenuButton,
     Last,
 }
 

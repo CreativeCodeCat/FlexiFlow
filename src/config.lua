@@ -877,6 +877,12 @@ flexiflow = {
             "#CC3333",
             "#CC3333",
         },
+        -- the menu button left of the tags (drawn in `norm` without this)
+        menu = {
+            foreground,
+            "#A165E8",
+            "#A165E8",
+        },
         -- the focused window's title: on the bar background, in the
         -- focus color (drawn in `sel` without this)
         title = {
@@ -943,6 +949,12 @@ flexiflow = {
         -- the power button next to the layout symbol opens `powermenu`
         -- (below) in `menu`
         button(ClkPowerButton, 0, Button1, powermenu),
+        -- the menu button left of the tags runs `menucmd`, like MOD+m
+        button(
+            ClkMenuButton, 0, Button1, spawn, {
+                V = menucmd,
+            }
+        ),
         button(
             ClkWinTitle, 0, Button2, zoom, {
                 I = 0,
@@ -1066,6 +1078,10 @@ flexiflow = {
         },
     },
     scratchpads = scratchpads,
+
+    -- the bar's menu button, drawn left of the tags (leave it empty for
+    -- no button); what clicking it does is bound with ClkMenuButton
+    menubutton = "\u{F0C9}",
 
     -- the bar's power button (drawn right after the layout symbol; leave
     -- `symbol` empty for no button) and the menu it opens: picking an

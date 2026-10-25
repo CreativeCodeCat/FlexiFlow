@@ -52,6 +52,11 @@ Config {
                 "#CC3333",
             ],
             [
+                "#283036",
+                "#A165E8",
+                "#A165E8",
+            ],
+            [
                 "#FF59F9",
                 "#283036",
                 "#283036",
@@ -2033,6 +2038,21 @@ Config {
             ),
         },
         Button {
+            click: 7,
+            mask: 0,
+            button: 1,
+            func: ButtonFn(
+                Some(
+                    "[func]",
+                ),
+            ),
+            arg: V(
+                [
+                    "menu",
+                ],
+            ),
+        },
+        Button {
             click: 3,
             mask: 0,
             button: 2,
@@ -2349,6 +2369,7 @@ Config {
             },
         ],
     },
+    menubutton: "\u{f0c9}",
     menu: [
         "fleximenu",
         "--fn",

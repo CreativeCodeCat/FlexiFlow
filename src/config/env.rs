@@ -50,8 +50,9 @@ pub(super) static HANDLERS: [(&str, &str); 51] = handler_fns! {
     horiz_grid, nrow_grid,
 };
 
-pub(super) static CLICKS: [(&str, u32); 7] = clicks! {
+pub(super) static CLICKS: [(&str, u32); 8] = clicks! {
     TagBar, LtSymbol, StatusText, WinTitle, ClientWin, RootWin, PowerButton,
+    MenuButton,
 };
 
 pub(super) static BUTTONS: [(&str, u32); 3] =

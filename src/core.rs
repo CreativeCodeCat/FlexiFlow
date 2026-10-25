@@ -1551,7 +1551,7 @@ pub fn bartag_at(
     m: *mut Monitor,
     x: c_int,
 ) -> Option<usize> {
-    let mut end = 0;
+    let mut end = menubuttonw(state);
     for (i, tag) in state.config.tags.iter().enumerate() {
         if !tagshown(state, m, i) {
             continue;
@@ -1562,6 +1562,15 @@ pub fn bartag_at(
         }
     }
     None
+}
+
+/// The width of the bar's menu button, 0 when there isn't one.
+pub fn menubuttonw(state: &mut State) -> c_int {
+    if state.config.menubutton.is_empty() {
+        0
+    } else {
+        textw(&mut state.drw, &state.config.menubutton, state.lrpad)
+    }
 }
 
 /// Whether `m`'s bar shows tag `i`: always, unless `hidevacant` leaves
@@ -1634,6 +1643,21 @@ pub fn drawbar(state: &mut State, m: *mut Monitor) {
         }
 
         let mut x = 0;
+        if !state.config.menubutton.is_empty() {
+            let symbol = state.config.menubutton.clone();
+            let w = menubuttonw(state);
+            drw::setscheme(&mut state.drw, state.scheme[Scheme::Menu].clone());
+            x = drw::text(
+                &mut state.drw,
+                x,
+                0,
+                w as u32,
+                state.bh as u32,
+                state.lrpad as u32 / 2,
+                &symbol,
+                0,
+            ) as i32;
+        }
         for (i, tag) in state.config.tags.iter().enumerate() {
             if !tagshown(state, m, i) {
                 continue;

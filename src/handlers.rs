@@ -26,7 +26,7 @@ use crate::{
     enums::{Clk, Net, WM},
     focus, getsystraywidth, grabkeys, height, is_visible,
     key_handlers::setlayout,
-    manage, recttomon, removesystrayicon, resizebarwin, resizeclient, restack,
+    manage, menubuttonw, recttomon, removesystrayicon, resizebarwin, resizeclient, restack,
     sendevent, setclientstate, setfocus, setfullscreen, sethovertag, seturgent,
     status_textw, swallowingclient, tagshown, textw, unfocus, unmanage,
     updatebars, updategeom, updatesizehints, updatestatus, updatesystray,
@@ -57,12 +57,15 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
             let shown: Vec<usize> = (0..state.config.tags.len())
                 .filter(|&i| tagshown(state, selmon, i))
                 .collect();
-            let x: i32 = shown
-                .into_iter()
-                .map(|i| {
-                    textw(&mut state.drw, &state.config.tags[i], state.lrpad)
-                })
-                .sum();
+            // the menu button, if any, comes before the tags
+            let menuw = menubuttonw(state);
+            let x: i32 = menuw
+                + shown
+                    .into_iter()
+                    .map(|i| {
+                        textw(&mut state.drw, &state.config.tags[i], state.lrpad)
+                    })
+                    .sum::<i32>();
             let ltw =
                 textw(&mut state.drw, &(*state.selmon).ltsymbol, state.lrpad);
             // the power button sits right after the layout symbol, and
@@ -76,7 +79,9 @@ pub fn buttonpress(state: &mut State, e: *mut XEvent) {
                     state.lrpad,
                 )
             };
-            if let Some(i) = bartag_at(state, state.selmon, ev.x) {
+            if ev.x < menuw {
+                click = Clk::MenuButton;
+            } else if let Some(i) = bartag_at(state, state.selmon, ev.x) {
                 click = Clk::TagBar;
                 arg = Arg::Ui(1 << i);
             } else if ev.x < x + ltw {

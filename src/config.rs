@@ -27,7 +27,7 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
     fn try_from(
         mut value: HashMap<String, Vec<String>>,
     ) -> Result<Self, Self::Error> {
-        let mut ret = vec![vec![]; 5];
+        let mut ret = vec![vec![]; 6];
         let norm = value.remove("norm").ok_or("missing key norm")?;
         let sel = value.remove("sel").ok_or("missing key sel")?;
 
@@ -53,6 +53,7 @@ impl TryFrom<HashMap<String, Vec<String>>> for ColorMap {
         for (key, scheme, fallback) in [
             ("layout", Scheme::Layout, Scheme::Norm),
             ("power", Scheme::Power, Scheme::Norm),
+            ("menu", Scheme::Menu, Scheme::Norm),
             ("title", Scheme::Title, Scheme::Sel),
         ] {
             ret[scheme as usize] = match value.remove(key) {
@@ -199,6 +200,11 @@ pub struct Config {
     /// without one, there's no button.
     #[serde(default)]
     pub powermenu: PowerMenu,
+
+    /// The symbol of the bar's menu button, drawn left of the tags;
+    /// bind `ClkMenuButton` to what it opens. Empty: no button.
+    #[serde(default)]
+    pub menubutton: String,
 
     /// The menu program, with its arguments, that the layout and power
     /// menus pipe their items into: dmenu-style, reading one item per
