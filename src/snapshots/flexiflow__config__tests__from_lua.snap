@@ -122,6 +122,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Focus next window",
+            group: "client",
         },
         Key {
             mod_: 64,
@@ -132,6 +134,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Focus previous window",
+            group: "client",
         },
         Key {
             mod_: 64,
@@ -142,6 +146,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Focus next window",
+            group: "client",
         },
         Key {
             mod_: 65,
@@ -152,6 +158,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Move window down the stack",
+            group: "client",
         },
         Key {
             mod_: 65,
@@ -162,6 +170,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Move window up the stack",
+            group: "client",
         },
         Key {
             mod_: 65,
@@ -172,6 +182,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Close window",
+            group: "client",
         },
         Key {
             mod_: 65,
@@ -182,6 +194,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Toggle floating",
+            group: "client",
         },
         Key {
             mod_: 64,
@@ -192,6 +206,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Next layout",
+            group: "layout",
         },
         Key {
             mod_: 68,
@@ -202,6 +218,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Previous layout",
+            group: "layout",
         },
         Key {
             mod_: 68,
@@ -212,6 +230,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Next layout",
+            group: "layout",
         },
         Key {
             mod_: 64,
@@ -222,6 +242,8 @@ Config {
             arg: F(
                 -0.05,
             ),
+            desc: "Shrink master area",
+            group: "layout",
         },
         Key {
             mod_: 64,
@@ -232,6 +254,8 @@ Config {
             arg: F(
                 0.05,
             ),
+            desc: "Grow master area",
+            group: "layout",
         },
         Key {
             mod_: 64,
@@ -242,6 +266,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "More windows in master",
+            group: "layout",
         },
         Key {
             mod_: 64,
@@ -252,6 +278,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Fewer windows in master",
+            group: "layout",
         },
         Key {
             mod_: 65,
@@ -262,6 +290,8 @@ Config {
             arg: F(
                 -0.25,
             ),
+            desc: "Shrink window's share",
+            group: "layout",
         },
         Key {
             mod_: 65,
@@ -272,6 +302,8 @@ Config {
             arg: F(
                 0.25,
             ),
+            desc: "Grow window's share",
+            group: "layout",
         },
         Key {
             mod_: 65,
@@ -282,6 +314,8 @@ Config {
             arg: F(
                 0.0,
             ),
+            desc: "Reset window's share",
+            group: "layout",
         },
         Key {
             mod_: 65,
@@ -292,6 +326,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow all gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -302,6 +338,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink all gaps",
+            group: "gaps",
         },
         Key {
             mod_: 65,
@@ -312,6 +350,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow inner gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -322,6 +362,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink inner gaps",
+            group: "gaps",
         },
         Key {
             mod_: 68,
@@ -332,6 +374,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow outer gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -342,6 +386,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink outer gaps",
+            group: "gaps",
         },
         Key {
             mod_: 68,
@@ -352,6 +398,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow outer horizontal gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -362,6 +410,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink outer horizontal gaps",
+            group: "gaps",
         },
         Key {
             mod_: 68,
@@ -372,6 +422,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow outer vertical gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -382,6 +434,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink outer vertical gaps",
+            group: "gaps",
         },
         Key {
             mod_: 68,
@@ -392,6 +446,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow inner horizontal gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -402,6 +458,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink inner horizontal gaps",
+            group: "gaps",
         },
         Key {
             mod_: 68,
@@ -412,6 +470,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Grow inner vertical gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -422,6 +482,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Shrink inner vertical gaps",
+            group: "gaps",
         },
         Key {
             mod_: 69,
@@ -432,6 +494,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Reset gaps",
+            group: "gaps",
         },
         Key {
             mod_: 64,
@@ -442,6 +506,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Toggle gaps",
+            group: "gaps",
         },
         Key {
             mod_: 64,
@@ -452,6 +518,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Focus next monitor",
+            group: "screen",
         },
         Key {
             mod_: 64,
@@ -462,6 +530,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Focus previous monitor",
+            group: "screen",
         },
         Key {
             mod_: 64,
@@ -472,6 +542,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Focus previous monitor",
+            group: "screen",
         },
         Key {
             mod_: 64,
@@ -482,6 +554,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Focus next monitor",
+            group: "screen",
         },
         Key {
             mod_: 65,
@@ -492,6 +566,8 @@ Config {
             arg: I(
                 -1,
             ),
+            desc: "Send window to previous monitor",
+            group: "screen",
         },
         Key {
             mod_: 65,
@@ -502,6 +578,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Send window to next monitor",
+            group: "screen",
         },
         Key {
             mod_: 8,
@@ -512,6 +590,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Toggle scratchpad terminal",
+            group: "scratchpad",
         },
         Key {
             mod_: 8,
@@ -522,6 +602,8 @@ Config {
             arg: I(
                 1,
             ),
+            desc: "Toggle scratchpad btop",
+            group: "scratchpad",
         },
         Key {
             mod_: 64,
@@ -534,6 +616,8 @@ Config {
                     "alacritty",
                 ],
             ),
+            desc: "Open a terminal",
+            group: "launcher",
         },
         Key {
             mod_: 65,
@@ -546,6 +630,8 @@ Config {
                     "nemo",
                 ],
             ),
+            desc: "Nemo",
+            group: "launcher",
         },
         Key {
             mod_: 64,
@@ -558,6 +644,8 @@ Config {
                     "menu",
                 ],
             ),
+            desc: "Run a program",
+            group: "launcher",
         },
         Key {
             mod_: 64,
@@ -570,6 +658,8 @@ Config {
                     "passmenu",
                 ],
             ),
+            desc: "Passwords",
+            group: "launcher",
         },
         Key {
             mod_: 64,
@@ -582,6 +672,8 @@ Config {
                     "clipmenu_run",
                 ],
             ),
+            desc: "Clipboard history",
+            group: "launcher",
         },
         Key {
             mod_: 64,
@@ -594,6 +686,8 @@ Config {
                     "youtube_subs",
                 ],
             ),
+            desc: "YouTube subscriptions",
+            group: "launcher",
         },
         Key {
             mod_: 65,
@@ -606,6 +700,8 @@ Config {
                     "powermenu_run",
                 ],
             ),
+            desc: "Power menu",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -618,6 +714,8 @@ Config {
                     "gnome_boxes",
                 ],
             ),
+            desc: "GNOME Boxes",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -630,6 +728,8 @@ Config {
                     "google-chrome-stable",
                 ],
             ),
+            desc: "Google Chrome",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -642,6 +742,8 @@ Config {
                     "code",
                 ],
             ),
+            desc: "VS Code",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -654,6 +756,8 @@ Config {
                     "discord",
                 ],
             ),
+            desc: "Discord",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -666,6 +770,8 @@ Config {
                     "hexchat",
                 ],
             ),
+            desc: "HexChat",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -678,6 +784,8 @@ Config {
                     "inkscape",
                 ],
             ),
+            desc: "Inkscape",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -690,6 +798,8 @@ Config {
                     "krita",
                 ],
             ),
+            desc: "Krita",
+            group: "launcher",
         },
         Key {
             mod_: 68,
@@ -702,6 +812,8 @@ Config {
                     "pkgbrowser",
                 ],
             ),
+            desc: "Package browser",
+            group: "launcher",
         },
         Key {
             mod_: 72,
@@ -714,6 +826,8 @@ Config {
                     "piper",
                 ],
             ),
+            desc: "Piper",
+            group: "launcher",
         },
         Key {
             mod_: 65,
@@ -726,6 +840,8 @@ Config {
                     "multimonitorlock-gui",
                 ],
             ),
+            desc: "Monitor lock",
+            group: "launcher",
         },
         Key {
             mod_: 64,
@@ -739,6 +855,8 @@ Config {
                     "-w",
                 ],
             ),
+            desc: "Screenshot window",
+            group: "screenshot",
         },
         Key {
             mod_: 65,
@@ -752,6 +870,8 @@ Config {
                     "-s",
                 ],
             ),
+            desc: "Screenshot region",
+            group: "screenshot",
         },
         Key {
             mod_: 68,
@@ -765,6 +885,8 @@ Config {
                     "-f",
                 ],
             ),
+            desc: "Screenshot screen",
+            group: "screenshot",
         },
         Key {
             mod_: 72,
@@ -778,6 +900,8 @@ Config {
                     "steam",
                 ],
             ),
+            desc: "Steam",
+            group: "launcher",
         },
         Key {
             mod_: 72,
@@ -791,6 +915,8 @@ Config {
                     "minecraft-launcher",
                 ],
             ),
+            desc: "Minecraft",
+            group: "launcher",
         },
         Key {
             mod_: 72,
@@ -804,6 +930,8 @@ Config {
                     "runescape-launcher",
                 ],
             ),
+            desc: "RuneScape",
+            group: "launcher",
         },
         Key {
             mod_: 0,
@@ -818,6 +946,8 @@ Config {
                     "5%+",
                 ],
             ),
+            desc: "Brightness up",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -832,6 +962,8 @@ Config {
                     "5%-",
                 ],
             ),
+            desc: "Brightness down",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -848,6 +980,8 @@ Config {
                     "unmute",
                 ],
             ),
+            desc: "Volume down",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -864,6 +998,8 @@ Config {
                     "unmute",
                 ],
             ),
+            desc: "Volume up",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -879,6 +1015,8 @@ Config {
                     "toggle",
                 ],
             ),
+            desc: "Mute",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -892,6 +1030,8 @@ Config {
                     "play-pause",
                 ],
             ),
+            desc: "Play/pause",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -905,6 +1045,8 @@ Config {
                     "play-pause",
                 ],
             ),
+            desc: "Play/pause",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -918,6 +1060,8 @@ Config {
                     "next",
                 ],
             ),
+            desc: "Next track",
+            group: "media",
         },
         Key {
             mod_: 0,
@@ -931,6 +1075,20 @@ Config {
                     "previous",
                 ],
             ),
+            desc: "Previous track",
+            group: "media",
+        },
+        Key {
+            mod_: 64,
+            keysym: 47,
+            func: Some(
+                "[func]",
+            ),
+            arg: I(
+                0,
+            ),
+            desc: "Show keybindings",
+            group: "flexiflow",
         },
         Key {
             mod_: 65,
@@ -941,6 +1099,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Quit FlexiFlow",
+            group: "flexiflow",
         },
         Key {
             mod_: 12,
@@ -951,6 +1111,8 @@ Config {
             arg: I(
                 0,
             ),
+            desc: "Restart FlexiFlow",
+            group: "flexiflow",
         },
         Key {
             mod_: 64,
@@ -961,6 +1123,8 @@ Config {
             arg: Ui(
                 1,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -971,6 +1135,8 @@ Config {
             arg: Ui(
                 1,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -981,6 +1147,8 @@ Config {
             arg: Ui(
                 1,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -991,6 +1159,8 @@ Config {
             arg: Ui(
                 1,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1001,6 +1171,8 @@ Config {
             arg: Ui(
                 1,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1011,6 +1183,8 @@ Config {
             arg: Ui(
                 2,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1021,6 +1195,8 @@ Config {
             arg: Ui(
                 2,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1031,6 +1207,8 @@ Config {
             arg: Ui(
                 2,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1041,6 +1219,8 @@ Config {
             arg: Ui(
                 2,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1051,6 +1231,8 @@ Config {
             arg: Ui(
                 2,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1061,6 +1243,8 @@ Config {
             arg: Ui(
                 4,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1071,6 +1255,8 @@ Config {
             arg: Ui(
                 4,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1081,6 +1267,8 @@ Config {
             arg: Ui(
                 4,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1091,6 +1279,8 @@ Config {
             arg: Ui(
                 4,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1101,6 +1291,8 @@ Config {
             arg: Ui(
                 4,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1111,6 +1303,8 @@ Config {
             arg: Ui(
                 8,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1121,6 +1315,8 @@ Config {
             arg: Ui(
                 8,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1131,6 +1327,8 @@ Config {
             arg: Ui(
                 8,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1141,6 +1339,8 @@ Config {
             arg: Ui(
                 8,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1151,6 +1351,8 @@ Config {
             arg: Ui(
                 8,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1161,6 +1363,8 @@ Config {
             arg: Ui(
                 16,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1171,6 +1375,8 @@ Config {
             arg: Ui(
                 16,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1181,6 +1387,8 @@ Config {
             arg: Ui(
                 16,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1191,6 +1399,8 @@ Config {
             arg: Ui(
                 16,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1201,6 +1411,8 @@ Config {
             arg: Ui(
                 16,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1211,6 +1423,8 @@ Config {
             arg: Ui(
                 32,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1221,6 +1435,8 @@ Config {
             arg: Ui(
                 32,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1231,6 +1447,8 @@ Config {
             arg: Ui(
                 32,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1241,6 +1459,8 @@ Config {
             arg: Ui(
                 32,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1251,6 +1471,8 @@ Config {
             arg: Ui(
                 32,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1261,6 +1483,8 @@ Config {
             arg: Ui(
                 64,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1271,6 +1495,8 @@ Config {
             arg: Ui(
                 64,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1281,6 +1507,8 @@ Config {
             arg: Ui(
                 64,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1291,6 +1519,8 @@ Config {
             arg: Ui(
                 64,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1301,6 +1531,8 @@ Config {
             arg: Ui(
                 64,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1311,6 +1543,8 @@ Config {
             arg: Ui(
                 128,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1321,6 +1555,8 @@ Config {
             arg: Ui(
                 128,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1331,6 +1567,8 @@ Config {
             arg: Ui(
                 128,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1341,6 +1579,8 @@ Config {
             arg: Ui(
                 128,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1351,6 +1591,8 @@ Config {
             arg: Ui(
                 128,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1361,6 +1603,8 @@ Config {
             arg: Ui(
                 256,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1371,6 +1615,8 @@ Config {
             arg: Ui(
                 256,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1381,6 +1627,8 @@ Config {
             arg: Ui(
                 256,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1391,6 +1639,8 @@ Config {
             arg: Ui(
                 256,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1401,6 +1651,8 @@ Config {
             arg: Ui(
                 256,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
         Key {
             mod_: 64,
@@ -1411,6 +1663,8 @@ Config {
             arg: Ui(
                 512,
             ),
+            desc: "View tag",
+            group: "tag",
         },
         Key {
             mod_: 68,
@@ -1421,6 +1675,8 @@ Config {
             arg: Ui(
                 512,
             ),
+            desc: "Also show tag",
+            group: "tag",
         },
         Key {
             mod_: 65,
@@ -1431,6 +1687,8 @@ Config {
             arg: Ui(
                 512,
             ),
+            desc: "Move window to tag and follow",
+            group: "tag",
         },
         Key {
             mod_: 72,
@@ -1441,6 +1699,8 @@ Config {
             arg: Ui(
                 512,
             ),
+            desc: "Move window to tag",
+            group: "tag",
         },
         Key {
             mod_: 69,
@@ -1451,6 +1711,8 @@ Config {
             arg: Ui(
                 512,
             ),
+            desc: "Also put window on tag",
+            group: "tag",
         },
     ],
     dmenucmd: [

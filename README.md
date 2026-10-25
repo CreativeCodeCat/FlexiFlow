@@ -125,6 +125,7 @@ highlights - see `src/config.lua` for the complete list:
 | `s_mod` + `,`/`.` | Move focused window to previous/next monitor |
 | Alt + `Return`/`b` | Toggle a scratchpad terminal/btop |
 | `modkey` + `Return` | Spawn a terminal |
+| `modkey` + `/` | Show a popup of every keybinding that has a description |
 | `s_mod` + `r` | Quit |
 | `Alt+Ctrl` + `r` | Restart in place (reloads the binary and config) |
 
@@ -137,6 +138,12 @@ highlights - see `src/config.lua` for the complete list:
 | Left-click the layout symbol | Cycle to the next layout |
 | Right-click the layout symbol | Open a menu at the pointer to jump to any layout via `FlexiFlow -l` |
 | Click the power button (next to the layout symbol) | Open a menu at the pointer of `powermenu` entries: logout, restart, shutdown by default |
+
+A keybinding's optional fifth and sixth arguments, `key(mod, keysym,
+func, arg, "Open a terminal", "launcher")`, describe it for the
+`modkey` + `/` popup, like awesome's hotkeys popup: each group gets a
+heading in the next tag's accent, keys sharing their modifiers and
+description share a line, and any key or click closes it.
 
 Both menus run the `menu` command from `src/config.lua`, which is
 [fleximenu](https://github.com/CreativeCodeCat/FlexiMenu) by default; any

@@ -1,12 +1,16 @@
 -- FlexiFlow config, baked in as the defaults rather than left for a
 -- user config file to override at runtime.
 -- Constructor functions ------------------------------------------------
-function key(mod, keysym, func, arg)
+-- `desc`, if given, is what the binding does: `hotkeys` lists every
+-- binding that has one, under the heading `group`
+function key(mod, keysym, func, arg, desc, group)
     return {
         mod_ = mod,
         keysym = keysym,
         func = func,
         arg = arg,
+        desc = desc,
+        group = group,
     }
 end
 
@@ -96,11 +100,11 @@ function tagkeys(keys)
         arg = {
             Ui = 1 << (i - 1),
         }
-        table.insert(keys, key(modkey, xk, view, arg))
-        table.insert(keys, key(modkey | ControlMask, xk, toggleview, arg))
-        table.insert(keys, key(s_mod, xk, tagview, arg))
-        table.insert(keys, key(modkey | altkey, xk, tag, arg))
-        table.insert(keys, key(s_mod | ControlMask, xk, toggletag, arg))
+        table.insert(keys, key(modkey, xk, view, arg, "View tag", "tag"))
+        table.insert(keys, key(modkey | ControlMask, xk, toggleview, arg, "Also show tag", "tag"))
+        table.insert(keys, key(s_mod, xk, tagview, arg, "Move window to tag and follow", "tag"))
+        table.insert(keys, key(modkey | altkey, xk, tag, arg, "Move window to tag", "tag"))
+        table.insert(keys, key(s_mod | ControlMask, xk, toggletag, arg, "Also put window on tag", "tag"))
     end
 end
 
@@ -166,205 +170,283 @@ keys = {
     key(
         modkey, XK_j, focusstack, {
             I = 1,
-        }
+        },
+        "Focus next window",
+        "client"
     ),
     key(
         modkey, XK_k, focusstack, {
             I = -1,
-        }
+        },
+        "Focus previous window",
+        "client"
     ),
     key(
         modkey, XK_Tab, focusstack, {
             I = 1,
-        }
+        },
+        "Focus next window",
+        "client"
     ),
     key(
         s_mod, XK_j, pushstack, {
             I = 1,
-        }
+        },
+        "Move window down the stack",
+        "client"
     ),
     key(
         s_mod, XK_k, pushstack, {
             I = -1,
-        }
+        },
+        "Move window up the stack",
+        "client"
     ),
     key(
         s_mod, XK_q, killclient, {
             I = 0,
-        }
+        },
+        "Close window",
+        "client"
     ),
     key(
         s_mod, XK_space, togglefloating, {
             I = 0,
-        }
+        },
+        "Toggle floating",
+        "client"
     ),
 
     -- layout / mfact / nmaster
     key(
         modkey, XK_space, cyclelayout, {
             I = 1,
-        }
+        },
+        "Next layout",
+        "layout"
     ),
     key(
         modkey | ControlMask, XK_comma, cyclelayout, {
             I = -1,
-        }
+        },
+        "Previous layout",
+        "layout"
     ),
     key(
         modkey | ControlMask, XK_period, cyclelayout, {
             I = 1,
-        }
+        },
+        "Next layout",
+        "layout"
     ),
     key(
         modkey, XK_h, setmfact, {
             F = -0.05,
-        }
+        },
+        "Shrink master area",
+        "layout"
     ),
     key(
         modkey, XK_l, setmfact, {
             F = 0.05,
-        }
+        },
+        "Grow master area",
+        "layout"
     ),
     key(
         modkey, XK_i, incnmaster, {
             I = 1,
-        }
+        },
+        "More windows in master",
+        "layout"
     ),
     key(
         modkey, XK_u, incnmaster, {
             I = -1,
-        }
+        },
+        "Fewer windows in master",
+        "layout"
     ),
 
     -- cfact (master/stack column share, follows the client)
     key(
         s_mod, XK_h, setcfact, {
             F = -0.25,
-        }
+        },
+        "Shrink window's share",
+        "layout"
     ),
     key(
         s_mod, XK_l, setcfact, {
             F = 0.25,
-        }
+        },
+        "Grow window's share",
+        "layout"
     ),
     key(
         s_mod, XK_o, setcfact, {
             F = 0.0,
-        }
+        },
+        "Reset window's share",
+        "layout"
     ),
 
     -- gaps
     key(
         s_mod, XK_u, incrgaps, {
             I = 1,
-        }
+        },
+        "Grow all gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_u, incrgaps, {
             I = -1,
-        }
+        },
+        "Shrink all gaps",
+        "gaps"
     ),
     key(
         s_mod, XK_i, incrigaps, {
             I = 1,
-        }
+        },
+        "Grow inner gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_i, incrigaps, {
             I = -1,
-        }
+        },
+        "Shrink inner gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask, XK_o, incrogaps, {
             I = 1,
-        }
+        },
+        "Grow outer gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_o, incrogaps, {
             I = -1,
-        }
+        },
+        "Shrink outer gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask, XK_Up, incrohgaps, {
             I = 1,
-        }
+        },
+        "Grow outer horizontal gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_Up, incrohgaps, {
             I = -1,
-        }
+        },
+        "Shrink outer horizontal gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask, XK_Right, incrovgaps, {
             I = 1,
-        }
+        },
+        "Grow outer vertical gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_Right, incrovgaps, {
             I = -1,
-        }
+        },
+        "Shrink outer vertical gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask, XK_Down, incrihgaps, {
             I = 1,
-        }
+        },
+        "Grow inner horizontal gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_Down, incrihgaps, {
             I = -1,
-        }
+        },
+        "Shrink inner horizontal gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask, XK_Left, incrivgaps, {
             I = 1,
-        }
+        },
+        "Grow inner vertical gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_Left, incrivgaps, {
             I = -1,
-        }
+        },
+        "Shrink inner vertical gaps",
+        "gaps"
     ),
     key(
         modkey | ControlMask | ShiftMask, XK_d, defaultgaps, {
             I = 0,
-        }
+        },
+        "Reset gaps",
+        "gaps"
     ),
     key(
         modkey, XK_g, togglegaps, {
             I = 0,
-        }
+        },
+        "Toggle gaps",
+        "gaps"
     ),
 
     -- screens / monitors
     key(
         modkey, XK_bracketright, focusmon, {
             I = 1,
-        }
+        },
+        "Focus next monitor",
+        "screen"
     ),
     key(
         modkey, XK_bracketleft, focusmon, {
             I = -1,
-        }
+        },
+        "Focus previous monitor",
+        "screen"
     ),
     key(
         modkey, XK_comma, focusmon, {
             I = -1,
-        }
+        },
+        "Focus previous monitor",
+        "screen"
     ),
     key(
         modkey, XK_period, focusmon, {
             I = 1,
-        }
+        },
+        "Focus next monitor",
+        "screen"
     ),
     key(
         s_mod, XK_comma, tagmon, {
             I = -1,
-        }
+        },
+        "Send window to previous monitor",
+        "screen"
     ),
     key(
         s_mod, XK_period, tagmon, {
             I = 1,
-        }
+        },
+        "Send window to next monitor",
+        "screen"
     ),
 
     -- scratchpads (indices into the `scratchpads` list below), on Alt
@@ -372,129 +454,167 @@ keys = {
     key(
         altkey, XK_Return, togglescratch, {
             I = 0,
-        }
+        },
+        "Toggle scratchpad terminal",
+        "scratchpad"
     ),
     key(
         altkey, XK_b, togglescratch, {
             I = 1,
-        }
+        },
+        "Toggle scratchpad btop",
+        "scratchpad"
     ),
 
     -- spawns
     key(
         modkey, XK_Return, spawn, {
             V = termcmd,
-        }
+        },
+        "Open a terminal",
+        "launcher"
     ),
     key(
         s_mod, XK_Return, spawn, {
             V = {
                 "nemo",
             },
-        }
+        },
+        "Nemo",
+        "launcher"
     ),
     key(
         modkey, XK_m, spawn, {
             V = menucmd,
-        }
+        },
+        "Run a program",
+        "launcher"
     ),
     key(
         modkey, XK_p, spawn, {
             V = {
                 "passmenu",
             },
-        }
+        },
+        "Passwords",
+        "launcher"
     ),
     key(
         modkey, XK_F1, spawn, {
             V = {
                 "clipmenu_run",
             },
-        }
+        },
+        "Clipboard history",
+        "launcher"
     ),
     key(
         modkey, XK_F2, spawn, {
             V = {
                 "youtube_subs",
             },
-        }
+        },
+        "YouTube subscriptions",
+        "launcher"
     ),
     key(
         s_mod, XK_e, spawn, {
             V = {
                 "powermenu_run",
             },
-        }
+        },
+        "Power menu",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_h, spawn, {
             V = {
                 "gnome_boxes",
             },
-        }
+        },
+        "GNOME Boxes",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_b, spawn, {
             V = {
                 "google-chrome-stable",
             },
-        }
+        },
+        "Google Chrome",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_e, spawn, {
             V = {
                 "code",
             },
-        }
+        },
+        "VS Code",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_d, spawn, {
             V = {
                 "discord",
             },
-        }
+        },
+        "Discord",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_x, spawn, {
             V = {
                 "hexchat",
             },
-        }
+        },
+        "HexChat",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_i, spawn, {
             V = {
                 "inkscape",
             },
-        }
+        },
+        "Inkscape",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_k, spawn, {
             V = {
                 "krita",
             },
-        }
+        },
+        "Krita",
+        "launcher"
     ),
     key(
         modkey | ControlMask, XK_p, spawn, {
             V = {
                 "pkgbrowser",
             },
-        }
+        },
+        "Package browser",
+        "launcher"
     ),
     key(
         modkey | altkey, XK_p, spawn, {
             V = {
                 "piper",
             },
-        }
+        },
+        "Piper",
+        "launcher"
     ),
     key(
         s_mod, XK_z, spawn, {
             V = {
                 "multimonitorlock-gui",
             },
-        }
+        },
+        "Monitor lock",
+        "launcher"
     ),
     key(
         modkey, XK_Print, spawn, {
@@ -502,7 +622,9 @@ keys = {
                 "win-shot",
                 "-w",
             },
-        }
+        },
+        "Screenshot window",
+        "screenshot"
     ),
     key(
         s_mod, XK_Print, spawn, {
@@ -510,7 +632,9 @@ keys = {
                 "win-shot",
                 "-s",
             },
-        }
+        },
+        "Screenshot region",
+        "screenshot"
     ),
     key(
         modkey | ControlMask, XK_Print, spawn, {
@@ -518,7 +642,9 @@ keys = {
                 "win-shot",
                 "-f",
             },
-        }
+        },
+        "Screenshot screen",
+        "screenshot"
     ),
     key(
         modkey | altkey, XK_s, spawn, {
@@ -526,7 +652,9 @@ keys = {
                 "prime-run",
                 "steam",
             },
-        }
+        },
+        "Steam",
+        "launcher"
     ),
     key(
         modkey | altkey, XK_m, spawn, {
@@ -534,7 +662,9 @@ keys = {
                 "prime-run",
                 "minecraft-launcher",
             },
-        }
+        },
+        "Minecraft",
+        "launcher"
     ),
     key(
         modkey | altkey, XK_r, spawn, {
@@ -542,7 +672,9 @@ keys = {
                 "prime-run",
                 "runescape-launcher",
             },
-        }
+        },
+        "RuneScape",
+        "launcher"
     ),
 
     -- XF86 media / brightness keys
@@ -553,7 +685,9 @@ keys = {
                 "set",
                 "5%+",
             },
-        }
+        },
+        "Brightness up",
+        "media"
     ),
     key(
         0, XF86XK_MonBrightnessDown, spawn, {
@@ -562,7 +696,9 @@ keys = {
                 "set",
                 "5%-",
             },
-        }
+        },
+        "Brightness down",
+        "media"
     ),
     key(
         0, XF86XK_AudioLowerVolume, spawn, {
@@ -573,7 +709,9 @@ keys = {
                 "5%-",
                 "unmute",
             },
-        }
+        },
+        "Volume down",
+        "media"
     ),
     key(
         0, XF86XK_AudioRaiseVolume, spawn, {
@@ -584,7 +722,9 @@ keys = {
                 "5%+",
                 "unmute",
             },
-        }
+        },
+        "Volume up",
+        "media"
     ),
     key(
         0, XF86XK_AudioMute, spawn, {
@@ -594,7 +734,9 @@ keys = {
                 "Master",
                 "toggle",
             },
-        }
+        },
+        "Mute",
+        "media"
     ),
     key(
         0, XF86XK_AudioPlay, spawn, {
@@ -602,7 +744,9 @@ keys = {
                 "playerctl",
                 "play-pause",
             },
-        }
+        },
+        "Play/pause",
+        "media"
     ),
     key(
         0, XF86XK_AudioPause, spawn, {
@@ -610,7 +754,9 @@ keys = {
                 "playerctl",
                 "play-pause",
             },
-        }
+        },
+        "Play/pause",
+        "media"
     ),
     key(
         0, XF86XK_AudioNext, spawn, {
@@ -618,7 +764,9 @@ keys = {
                 "playerctl",
                 "next",
             },
-        }
+        },
+        "Next track",
+        "media"
     ),
     key(
         0, XF86XK_AudioPrev, spawn, {
@@ -626,14 +774,27 @@ keys = {
                 "playerctl",
                 "previous",
             },
-        }
+        },
+        "Previous track",
+        "media"
+    ),
+
+    -- every keybinding that has a description, listed in `menu`
+    key(
+        modkey, XK_slash, hotkeys, {
+            I = 0,
+        },
+        "Show keybindings",
+        "flexiflow"
     ),
 
     -- session
     key(
         s_mod, XK_r, quit, {
             I = 0,
-        }
+        },
+        "Quit FlexiFlow",
+        "flexiflow"
     ),
     -- re-exec the running binary in place: picks up a `cargo build`
     -- rebuild and/or a reloaded config.lua without logging out (open
@@ -641,7 +802,9 @@ keys = {
     key(
         altkey | ControlMask, XK_r, restart, {
             I = 0,
-        }
+        },
+        "Restart FlexiFlow",
+        "flexiflow"
     ),
 }
 tagkeys(keys)

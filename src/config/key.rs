@@ -28,6 +28,13 @@ pub struct Key {
     pub func: KeyFn,
     #[serde(default = "crate::default_button_arg")]
     pub arg: Arg,
+    /// what the binding does, listed by `hotkeys`; bindings without one
+    /// are left out of that list
+    #[serde(default)]
+    pub desc: String,
+    /// the heading `hotkeys` lists it under
+    #[serde(default)]
+    pub group: String,
 }
 
 impl Debug for Key {
@@ -37,6 +44,8 @@ impl Debug for Key {
             .field("keysym", &self.keysym)
             .field("func", &self.func.0.map(|_| "[func]"))
             .field("arg", &self.arg)
+            .field("desc", &self.desc)
+            .field("group", &self.group)
             .finish()
     }
 }
@@ -48,7 +57,14 @@ impl Key {
         func: fn(&mut State, *const Arg),
         arg: Arg,
     ) -> Self {
-        Self { mod_, keysym: keysym as KeySym, func: KeyFn(Some(func)), arg }
+        Self {
+            mod_,
+            keysym: keysym as KeySym,
+            func: KeyFn(Some(func)),
+            arg,
+            desc: String::new(),
+            group: String::new(),
+        }
     }
 }
 
@@ -87,6 +103,7 @@ pub(crate) static FUNC_MAP: LazyLock<FnMap> = LazyLock::new(|| {
         ("cyclelayout", cyclelayout as FN),
         ("layoutmenu", layoutmenu as FN),
         ("powermenu", powermenu as FN),
+        ("hotkeys", hotkeys as FN),
         ("incrgaps", incrgaps as FN),
         ("incrigaps", incrigaps as FN),
         ("incrogaps", incrogaps as FN),
