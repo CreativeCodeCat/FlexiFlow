@@ -881,8 +881,8 @@ flexiflow = {
         -- with the tag accents (drawn in `norm` without this)
         menu = {
             "#FCFCFC",
-            "#5C6670",
-            "#5C6670",
+            "#434C5E",
+            "#434C5E",
         },
         -- the focused window's title: on the bar background, in the
         -- focus color (drawn in `sel` without this)
