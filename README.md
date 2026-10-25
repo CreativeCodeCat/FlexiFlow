@@ -112,12 +112,12 @@ and accent colors of its groups:
 
 ```lua
 hotkeys = {
-    bg = "#1E222A", fg = "#E0E0E0", dim = "#7A8290",
-    key_fg = "#ECEFF4", key_bg = "#2E3440",
+    bg = "#202326", fg = "#FCFCFC", dim = "#A1A9B1",
+    key_fg = "#FCFCFC", key_bg = "#292C30",
     columns = 4,
     groups = {
-        { name = "launcher", label = "Apps & Launchers", color = "#A6E3A1" },
-        { name = "client", label = "Windows", color = "#89B4FA" },
+        { name = "launcher", label = "Apps & Launchers", color = "#27AE60" },
+        { name = "client", label = "Windows", color = "#3DAEE9" },
         -- ...
     },
 },

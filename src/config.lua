@@ -1109,30 +1109,31 @@ flexiflow = {
 
     -- the keybindings popup (MOD+/): its colors, and its groups in the
     -- order they're shown, each with a heading and an accent. Accents
-    -- follow what the keys do - blue for windows, mauve for FlexiFlow
-    -- itself, green for apps, peach for media. Groups not listed follow
-    -- in the order they're first bound, with a pastel accent of their own
+    -- follow what the keys do - blue for windows, purple for FlexiFlow
+    -- itself, green for apps, orange for media. Groups not listed follow
+    -- in the order they're first bound, with an accent of their own.
+    -- The colors are KDE's Breeze Dark
     hotkeys = {
-        bg = "#1E222A",
-        fg = "#E0E0E0",
-        dim = "#7A8290",
-        key_fg = "#ECEFF4",
-        key_bg = "#2E3440",
+        bg = "#202326",
+        fg = "#FCFCFC",
+        dim = "#A1A9B1",
+        key_fg = "#FCFCFC",
+        key_bg = "#292C30",
         -- fewer if the popup would be wider than the screen, more if a
         -- column would be taller than it
         columns = 4,
         groups = {
-            { name = "launcher", label = "Apps & Launchers", color = "#A6E3A1" },
-            { name = "client", label = "Windows", color = "#89B4FA" },
-            { name = "flexiflow", label = "System", color = "#CBA6F7" },
-            { name = "layout", label = "Layouts", color = "#89B4FA" },
-            { name = "tag", label = "Tags", color = "#89B4FA" },
-            { name = "screen", label = "Monitors", color = "#89B4FA" },
-            { name = "gaps", label = "Gaps", color = "#89B4FA" },
-            { name = "scratchpad", label = "Scratchpads", color = "#A6E3A1" },
-            { name = "screenshot", label = "Screenshots", color = "#A6E3A1" },
-            { name = "bar", label = "Bar", color = "#CBA6F7" },
-            { name = "media", label = "Media", color = "#FAB387" },
+            { name = "launcher", label = "Apps & Launchers", color = "#27AE60" },
+            { name = "client", label = "Windows", color = "#3DAEE9" },
+            { name = "flexiflow", label = "System", color = "#9B59B6" },
+            { name = "layout", label = "Layouts", color = "#3DAEE9" },
+            { name = "tag", label = "Tags", color = "#3DAEE9" },
+            { name = "screen", label = "Monitors", color = "#3DAEE9" },
+            { name = "gaps", label = "Gaps", color = "#3DAEE9" },
+            { name = "scratchpad", label = "Scratchpads", color = "#27AE60" },
+            { name = "screenshot", label = "Screenshots", color = "#27AE60" },
+            { name = "bar", label = "Bar", color = "#9B59B6" },
+            { name = "media", label = "Media", color = "#F67400" },
         },
     },
 

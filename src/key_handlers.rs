@@ -469,10 +469,10 @@ const HOTKEYS_TITLE: &str = "Keybindings";
 const HOTKEYS_PLACEHOLDER: &str = "\u{F002}  Type to filter";
 
 /// Accents for the `hotkeys` popup's groups that `Hotkeys::groups`
-/// gives no color: soft pastels that sit quietly on a dark background.
+/// gives no color: KDE Breeze's accents.
 const HOTKEYS_PALETTE: [&str; 7] = [
-    "#89B4FA", "#A6E3A1", "#CBA6F7", "#FAB387", "#F9E2AF", "#94E2D5",
-    "#F38BA8",
+    "#3DAEE9", "#27AE60", "#9B59B6", "#F67400", "#FDBC4B", "#1ABC9C",
+    "#DA4453",
 ];
 
 /// How much of a group's accent tints its key badges.
