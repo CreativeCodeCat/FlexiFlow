@@ -175,6 +175,11 @@ pub struct Config {
 
     pub systrayspacing: c_uint,
 
+    /// The height of the system tray's icons, in pixels, centred in the
+    /// bar; 0, or more than the bar's height, for the bar's height.
+    #[serde(default)]
+    pub systrayiconsize: c_int,
+
     /// if pinning fails and this is true, display systray on the first monitor,
     /// else display systray on the last monitor
     pub systraypinningfailfirst: bool,

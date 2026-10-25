@@ -793,6 +793,9 @@ flexiflow = {
     systraypinning = 0,
     systrayonleft = false,
     systrayspacing = 2,
+    -- the tray icons' height in pixels, centred in the bar (0 for the
+    -- bar's full height)
+    systrayiconsize = 16,
     systraypinningfailfirst = true,
     showsystray = true,
     buttons = {

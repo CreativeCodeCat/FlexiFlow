@@ -1164,6 +1164,15 @@ pub fn updatestatus(state: &mut State) {
     updatesystray(state);
 }
 
+/// The system tray icons' height: `Config::systrayiconsize`, if it's set
+/// and fits in the bar, else the bar's height.
+fn systray_icon_size(state: &State) -> c_int {
+    match state.config.systrayiconsize {
+        size if size > 0 && size < state.bh => size,
+        _ => state.bh,
+    }
+}
+
 pub fn updatesystrayicongeom(
     state: &mut State,
     i: *mut Client,
@@ -1175,23 +1184,24 @@ pub fn updatesystrayicongeom(
     }
     unsafe {
         let i = &mut *i;
-        i.h = state.bh;
+        let size = systray_icon_size(state);
+        i.h = size;
         if w == h {
-            i.w = state.bh;
-        } else if h == state.bh {
+            i.w = size;
+        } else if h == size {
             i.w = w;
         } else {
-            i.w = (state.bh as f32 * (w as f32 / h as f32)) as i32;
+            i.w = (size as f32 * (w as f32 / h as f32)) as i32;
         }
         applysizehints(state, i, &mut i.x, &mut i.y, &mut i.w, &mut i.h, False);
         // force icons into the systray dimensions if they don't want to
-        if i.h > state.bh {
+        if i.h > size {
             if i.w == i.h {
-                i.w = state.bh;
+                i.w = size;
             } else {
-                i.w = (state.bh as f32 * (i.w as f32 / i.h as f32)) as i32;
+                i.w = (size as f32 * (i.w as f32 / i.h as f32)) as i32;
             }
-            i.h = state.bh;
+            i.h = size;
         }
     }
 }
@@ -1351,7 +1361,9 @@ pub fn updatesystray(state: &mut State) {
             XMapRaised(state.dpy, (*i).win);
             w += state.config.systrayspacing;
             (*i).x = w as i32;
-            XMoveResizeWindow(state.dpy, (*i).win, (*i).x, 0, (*i).w as u32, (*i).h as u32);
+            // centred in the bar, when they're smaller than it
+            let y = (state.bh - (*i).h).max(0) / 2;
+            XMoveResizeWindow(state.dpy, (*i).win, (*i).x, y, (*i).w as u32, (*i).h as u32);
             w += (*i).w as u32;
             if (*i).mon != m {
                 (*i).mon = m;

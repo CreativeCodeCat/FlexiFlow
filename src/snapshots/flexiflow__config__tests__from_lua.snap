@@ -1992,6 +1992,7 @@ Config {
     systraypinning: 0,
     systrayonleft: false,
     systrayspacing: 2,
+    systrayiconsize: 16,
     systraypinningfailfirst: true,
     showsystray: true,
     buttons: [
