@@ -64,6 +64,9 @@ pub struct State {
     /// Bar colors for a tag under the pointer, one per tag: its accent on
     /// a tint of that accent over the bar background.
     pub hoverscheme: Vec<Vec<Clr>>,
+    /// Fonts the status text asked for with `^f<font>^`, by name, loaded
+    /// on first use; `None` for one that wouldn't load.
+    pub statusfonts: std::collections::HashMap<String, Option<Vec<drw::Fnt>>>,
     /// Whether the bar leaves out tags with no windows that aren't in
     /// view (`togglevacant`).
     pub hidevacant: bool,

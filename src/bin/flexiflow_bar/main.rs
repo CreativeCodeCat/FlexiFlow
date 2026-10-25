@@ -26,13 +26,38 @@ fn set_status(text: &str) {
 }
 
 /// A chip starts straight with its own colors, so chips sit flush
-/// against each other with no bar background showing between them.
-fn render_chip(fg: &str, accent: &(String, String), icon: &str, label: &str) -> String {
+/// against each other with no bar background showing between them. It's
+/// boxed in `border` (see `Colors::border`), which also ends the last
+/// chip's box.
+fn render_chip(
+    fg: &str,
+    accent: &(String, String),
+    border: &str,
+    icon: &str,
+    label: &str,
+) -> String {
     let (bg, bright) = accent;
+    let border = match border {
+        "" => bg.as_str(),
+        "none" => "",
+        color => color,
+    };
     if icon.is_empty() {
-        format!("^c{fg}^^b{bright}^ {label} ")
+        format!("^o{border}^^c{fg}^^b{bright}^ {label} ")
     } else {
-        format!("^c{fg}^^b{bg}^ {icon} ^c{fg}^^b{bright}^ {label} ")
+        format!(
+            "^o{border}^^c{fg}^^b{bg}^ {icon} ^c{fg}^^b{bright}^ {label} "
+        )
+    }
+}
+
+/// The chips one after another, in `font` if there is one.
+fn status_text(font: &str, chips: &[String]) -> String {
+    let chips = chips.concat();
+    if font.is_empty() {
+        chips
+    } else {
+        format!("^f{font}^{chips}")
     }
 }
 
@@ -90,11 +115,17 @@ fn main() {
                 &cfg.colors.accents[i % cfg.colors.accents.len()]
             };
             for (icon, label) in pairs {
-                chips.push(render_chip(&cfg.colors.fg, accent, &icon, &label));
+                chips.push(render_chip(
+                    &cfg.colors.fg,
+                    accent,
+                    &cfg.colors.border,
+                    &icon,
+                    &label,
+                ));
             }
         }
 
-        set_status(&chips.concat());
+        set_status(&status_text(&cfg.font, &chips));
 
         std::thread::sleep(Duration::from_millis(cfg.interval_ms));
     }
@@ -108,12 +139,32 @@ mod tests {
     fn chips_start_with_their_own_colors_so_they_sit_flush() {
         let accent = ("#A165E8".to_string(), "#C9A4FF".to_string());
         assert_eq!(
-            render_chip("#283036", &accent, "", "6.17"),
-            "^c#283036^^b#C9A4FF^ 6.17 "
+            render_chip("#283036", &accent, "none", "", "6.17"),
+            "^o^^c#283036^^b#C9A4FF^ 6.17 "
         );
         assert_eq!(
-            render_chip("#283036", &accent, "V", "50%"),
-            "^c#283036^^b#A165E8^ V ^c#283036^^b#C9A4FF^ 50% "
+            render_chip("#283036", &accent, "none", "V", "50%"),
+            "^o^^c#283036^^b#A165E8^ V ^c#283036^^b#C9A4FF^ 50% "
+        );
+    }
+
+    #[test]
+    fn a_font_is_set_once_before_the_chips() {
+        let chips = ["a".to_string(), "b".to_string()];
+        assert_eq!(status_text("", &chips), "ab");
+        assert_eq!(status_text("Mono:size=9", &chips), "^fMono:size=9^ab");
+    }
+
+    #[test]
+    fn chips_are_boxed_in_their_darker_accent_unless_given_a_border() {
+        let accent = ("#A165E8".to_string(), "#C9A4FF".to_string());
+        assert!(
+            render_chip("#283036", &accent, "", "", "6.17")
+                .starts_with("^o#A165E8^")
+        );
+        assert!(
+            render_chip("#283036", &accent, "#FFFFFF", "", "6.17")
+                .starts_with("^o#FFFFFF^")
         );
     }
 }

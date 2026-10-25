@@ -6,11 +6,19 @@ use mlua::LuaSerdeExt as _;
 pub struct Colors {
     pub fg: String,
     pub accents: Vec<(String, String)>,
+    /// the border around each chip: its own darker accent if empty,
+    /// none at all if "none"
+    #[serde(default)]
+    pub border: String,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct BarConfig {
     pub interval_ms: u64,
+    /// the font the chips are drawn in, like `"Hack Nerd Font:size=9"`;
+    /// FlexiFlow's own bar font if empty
+    #[serde(default)]
+    pub font: String,
     pub colors: Colors,
     pub segments: Vec<String>,
 }

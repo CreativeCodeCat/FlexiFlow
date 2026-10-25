@@ -9,8 +9,15 @@
 -- segments and 7 accents, colors repeat starting at "network".
 return {
     interval_ms = 500,
+    -- the font the chips are drawn in, like "Hack Nerd Font:size=9"; ""
+    -- for FlexiFlow's own bar font. The bar's height doesn't change, so
+    -- a font bigger than the bar's is cut off
+    font = "Hack Nerd Font:size=8",
     colors = {
         fg = "#283036",
+        -- the border around each chip: a color, "" for the chip's own
+        -- darker accent, or "none"
+        border = "",
         accents = {
             {
                 "#A165E8",

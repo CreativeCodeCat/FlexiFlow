@@ -264,6 +264,7 @@ pub fn setup(dpy: *mut Display) -> State {
             scheme: Default::default(),
             tagscheme: Vec::new(),
             hoverscheme: Vec::new(),
+            statusfonts: Default::default(),
             hidevacant: false,
             screen,
             root,
@@ -1450,20 +1451,48 @@ pub fn textw(drw: &mut Drw, x: &str, lrpad: c_int) -> c_int {
     unsafe { drw::fontset_getwidth(drw, x) as c_int + lrpad }
 }
 
+/// A run of status text in its own `(text, fg, bg)` colors.
+type StatusRun = (String, String, String);
+
+/// A border around status runs `start..end`, in `color`.
+#[derive(Debug, PartialEq)]
+struct StatusBox {
+    start: usize,
+    end: usize,
+    color: String,
+}
+
 /// Split `text` on inline color codes - `^c#RRGGBB^` sets the
 /// foreground, `^b#RRGGBB^` the background, `^d^` resets both to
-/// `norm_fg`/`norm_bg` - into `(text, fg, bg)` runs. Unrecognized codes
-/// are dropped silently. `flexiflow_bar` (and this fork's `-b` flag)
-/// produce text in this format.
-fn parse_status_segments(
+/// `norm_fg`/`norm_bg` - into `(text, fg, bg)` runs, and the boxes around
+/// them: `^o#RRGGBB^` starts a box bordered in that color (ending any box
+/// already open), and `^o^` ends it, as does the end of `text`. The third
+/// part is each run's font: `^f<font>^` sets it, say `^fMonospace:size=9^`,
+/// and `^f^` goes back to the bar's own (`None`).
+/// Unrecognized codes are dropped silently. `flexiflow_bar` (and this
+/// fork's `-b` flag) produce text in this format.
+fn parse_status(
     text: &str,
     norm_fg: &str,
     norm_bg: &str,
-) -> Vec<(String, String, String)> {
-    let mut segs = vec![];
+) -> (Vec<StatusRun>, Vec<StatusBox>, Vec<Option<String>>) {
+    let mut segs: Vec<StatusRun> = vec![];
+    let mut fonts: Vec<Option<String>> = vec![];
+    let mut font: Option<String> = None;
+    let mut boxes: Vec<StatusBox> = vec![];
+    let mut open: Option<(usize, String)> = None;
     let (mut fg, mut bg) = (norm_fg.to_string(), norm_bg.to_string());
     let mut buf = String::new();
     let mut chars = text.chars();
+    let close = |open: &mut Option<(usize, String)>,
+                 boxes: &mut Vec<StatusBox>,
+                 end: usize| {
+        if let Some((start, color)) = open.take()
+            && end > start
+        {
+            boxes.push(StatusBox { start, end, color });
+        }
+    };
     while let Some(c) = chars.next() {
         if c != '^' {
             buf.push(c);
@@ -1472,11 +1501,19 @@ fn parse_status_segments(
         let code: String = chars.by_ref().take_while(|&c| c != '^').collect();
         if !buf.is_empty() {
             segs.push((std::mem::take(&mut buf), fg.clone(), bg.clone()));
+            fonts.push(font.clone());
         }
         if let Some(hex) = code.strip_prefix('c') {
             fg = hex.to_string();
         } else if let Some(hex) = code.strip_prefix('b') {
             bg = hex.to_string();
+        } else if let Some(hex) = code.strip_prefix('o') {
+            close(&mut open, &mut boxes, segs.len());
+            if !hex.is_empty() {
+                open = Some((segs.len(), hex.to_string()));
+            }
+        } else if let Some(name) = code.strip_prefix('f') {
+            font = (!name.is_empty()).then(|| name.to_string());
         } else if code == "d" {
             fg = norm_fg.to_string();
             bg = norm_bg.to_string();
@@ -1484,8 +1521,10 @@ fn parse_status_segments(
     }
     if !buf.is_empty() {
         segs.push((buf, fg, bg));
+        fonts.push(font);
     }
-    segs
+    close(&mut open, &mut boxes, segs.len());
+    (segs, boxes, fonts)
 }
 
 /// Pixel width of `state.stext` as `draw_status2d` draws it, i.e. with
@@ -1493,10 +1532,80 @@ fn parse_status_segments(
 /// measures them as literal text, which for flexiflow_bar's output comes
 /// out wider than the whole screen.
 pub fn status_textw(state: &mut State) -> c_int {
-    parse_status_segments(&state.stext, "", "")
+    let (segs, boxes, fonts) = parse_status(&state.stext, "", "");
+    let widths: Vec<c_int> = segs
         .iter()
-        .map(|(text, ..)| textw(&mut state.drw, text, 0))
-        .sum()
+        .zip(&fonts)
+        .map(|((text, ..), font)| {
+            with_status_font(state, font.as_deref(), |drw| textw(drw, text, 0))
+        })
+        .collect();
+    status_layout(&widths, &boxes, status_box_margin(state.bh as c_uint)).1
+}
+
+/// The gap around each status box, on all four sides: a fifth of the
+/// bar's height `h`, but at least 2 pixels.
+fn status_box_margin(h: c_uint) -> c_int {
+    (h as c_int / 5).max(2)
+}
+
+/// Where each status run starts, counting from the left of the status
+/// text, and how wide the whole text is, for runs `widths` wide with
+/// `margin` around each of `boxes`. Boxes side by side share one gap.
+fn status_layout(
+    widths: &[c_int],
+    boxes: &[StatusBox],
+    margin: c_int,
+) -> (Vec<c_int>, c_int) {
+    let mut xs = Vec::with_capacity(widths.len());
+    let mut x = 0;
+    let mut after_box = false;
+    for (i, w) in widths.iter().enumerate() {
+        if boxes.iter().any(|b| b.start == i) && !after_box {
+            x += margin;
+        }
+        xs.push(x);
+        x += w;
+        after_box = boxes.iter().any(|b| b.end == i + 1);
+        if after_box {
+            x += margin;
+        }
+    }
+    (xs, x)
+}
+
+/// Runs `f` with `state.drw` drawing in `font`, loaded the first time
+/// it's asked for and kept in `State::statusfonts`; in the bar's own font
+/// for `None`, or one that won't load.
+fn with_status_font<R>(
+    state: &mut State,
+    font: Option<&str>,
+    f: impl FnOnce(&mut drw::Drw) -> R,
+) -> R {
+    let Some(name) = font else { return f(&mut state.drw) };
+    if !state.statusfonts.contains_key(name) {
+        let own = std::mem::take(&mut state.drw.fonts);
+        let loaded = CString::new(name)
+            .ok()
+            .and_then(|c| drw::fontset_create(&mut state.drw, &[c]).ok());
+        let fonts = std::mem::replace(&mut state.drw.fonts, own);
+        let fonts = (loaded.is_some() && !fonts.is_empty()).then_some(fonts);
+        if fonts.is_none() {
+            log::warn!("status text: can't load font {name:?}");
+        }
+        state.statusfonts.insert(name.to_string(), fonts);
+    }
+    let Some(Some(fonts)) = state.statusfonts.get_mut(name) else {
+        return f(&mut state.drw);
+    };
+    // swapped back afterwards, keeping any fallback fonts the drawing
+    // added for characters the font lacks
+    std::mem::swap(&mut state.drw.fonts, fonts);
+    let r = f(&mut state.drw);
+    if let Some(Some(fonts)) = state.statusfonts.get_mut(name) {
+        std::mem::swap(&mut state.drw.fonts, fonts);
+    }
+    r
 }
 
 /// Render `state.stext`'s status2d segments right-aligned against
@@ -1508,14 +1617,21 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     let norm = &state.config.colors.0[Scheme::Norm as usize];
     let norm_fg = norm[Col::Fg as usize].to_string_lossy().into_owned();
     let norm_bg = norm[Col::Bg as usize].to_string_lossy().into_owned();
-    let segs = parse_status_segments(&state.stext, &norm_fg, &norm_bg);
+    let (segs, boxes, fonts) =
+        parse_status(&state.stext, &norm_fg, &norm_bg);
 
     let raw_widths: Vec<c_int> = segs
         .iter()
-        .map(|(text, ..)| textw(&mut state.drw, text, 0))
+        .zip(&fonts)
+        .map(|((text, ..), font)| {
+            with_status_font(state, font.as_deref(), |drw| textw(drw, text, 0))
+        })
         .collect();
-    let total_raw: c_int = raw_widths.iter().sum();
-    let tw = total_raw + state.lrpad / 2 + 2;
+    // boxed runs sit inset from the bar's edges and from each other,
+    // with the bar background showing all around them
+    let margin = status_box_margin(h);
+    let (xs, total) = status_layout(&raw_widths, &boxes, margin);
+    let tw = total + state.lrpad / 2 + 2;
 
     // fill the padding on both sides in the normal scheme up front - the
     // runs below only paint under their own text, so otherwise the
@@ -1523,8 +1639,14 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
     drw::setscheme(&mut state.drw, state.scheme[Scheme::Norm].clone());
     drw::rect(&mut state.drw, x_end - tw, 0, tw as c_uint, h, true, true);
 
-    let mut x = x_end - tw + (state.lrpad / 2 - 2).max(0);
-    for ((text, fg, bg), w) in segs.iter().zip(raw_widths) {
+    let x0 = x_end - tw + (state.lrpad / 2 - 2).max(0);
+    let boxed = |i: usize| boxes.iter().any(|b| (b.start..b.end).contains(&i));
+    for (i, ((text, fg, bg), &w)) in segs.iter().zip(&raw_widths).enumerate() {
+        let (y, rh) = if boxed(i) {
+            (margin, h - 2 * margin as c_uint)
+        } else {
+            (0, h)
+        };
         // a color X can't parse falls back to the normal scheme
         let scm = match (CString::new(fg.as_str()), CString::new(bg.as_str())) {
             (Ok(fgc), Ok(bgc)) => drw::scm_try_create(&state.drw, &[fgc, bgc]),
@@ -1532,10 +1654,31 @@ fn draw_status2d(state: &mut State, x_end: c_int, h: c_uint) -> c_int {
         }
         .unwrap_or_else(|| state.scheme[Scheme::Norm].clone());
         drw::setscheme(&mut state.drw, scm);
-        unsafe {
-            drw::text(&mut state.drw, x, 0, w as c_uint, h, 0, text, 0);
-        }
-        x += w;
+        let x = x0 + xs[i];
+        with_status_font(state, fonts[i].as_deref(), |drw| unsafe {
+            drw::text(drw, x, y, w as c_uint, rh, 0, text, 0);
+        });
+    }
+
+    // each box's border goes over the edges of the runs it holds
+    for b in boxes {
+        let Some(scm) = CString::new(b.color.as_str())
+            .ok()
+            .and_then(|c| drw::scm_try_create(&state.drw, &[c]))
+        else {
+            continue;
+        };
+        let w: c_int = raw_widths[b.start..b.end].iter().sum();
+        drw::setscheme(&mut state.drw, scm);
+        drw::rect(
+            &mut state.drw,
+            x0 + xs[b.start],
+            margin,
+            w as c_uint,
+            h - 2 * margin as c_uint,
+            false,
+            false,
+        );
     }
 
     tw
@@ -3221,7 +3364,58 @@ pub fn getstate(state: &mut State, w: Window) -> c_long {
 
 #[cfg(test)]
 mod status2d_tests {
-    use super::parse_status_segments;
+    use super::{StatusBox, StatusRun, parse_status, status_layout};
+
+    fn parse_status_segments(
+        text: &str,
+        norm_fg: &str,
+        norm_bg: &str,
+    ) -> Vec<StatusRun> {
+        parse_status(text, norm_fg, norm_bg).0
+    }
+
+    #[test]
+    fn o_boxes_the_runs_until_the_next_o() {
+        let text = "^o#111111^^b#222222^a^b#333333^b^o#444444^c^o^d";
+        let (segs, boxes, _) = parse_status(text, "#000000", "#ffffff");
+        assert_eq!(segs.len(), 4);
+        assert_eq!(
+            boxes,
+            vec![
+                StatusBox { start: 0, end: 2, color: "#111111".into() },
+                StatusBox { start: 2, end: 3, color: "#444444".into() },
+            ]
+        );
+    }
+
+    #[test]
+    fn boxes_get_a_margin_each_side_shared_between_neighbours() {
+        let boxes = [
+            StatusBox { start: 1, end: 2, color: String::new() },
+            StatusBox { start: 2, end: 3, color: String::new() },
+        ];
+        // plain, box, box: 10, gap, 20, gap, 30, gap
+        assert_eq!(
+            status_layout(&[10, 20, 30], &boxes, 4),
+            (vec![0, 14, 38], 72)
+        );
+    }
+
+    #[test]
+    fn f_sets_the_font_of_the_runs_after_it() {
+        let (_, _, fonts) =
+            parse_status("a^fMono:size=9^b^f^c", "#000000", "#ffffff");
+        assert_eq!(fonts, [None, Some("Mono:size=9".to_string()), None]);
+    }
+
+    #[test]
+    fn an_unclosed_box_ends_with_the_text() {
+        let (_, boxes, _) = parse_status("^o#111111^a", "#000000", "#ffffff");
+        assert_eq!(
+            boxes,
+            vec![StatusBox { start: 0, end: 1, color: "#111111".into() }]
+        );
+    }
 
     #[test]
     fn splits_on_color_codes_and_keeps_the_color_set_before_each_run() {
