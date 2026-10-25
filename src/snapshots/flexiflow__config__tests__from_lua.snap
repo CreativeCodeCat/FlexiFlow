@@ -2065,7 +2065,7 @@ Config {
         Button {
             click: 2,
             mask: 0,
-            button: 2,
+            button: 1,
             func: ButtonFn(
                 Some(
                     "[func]",

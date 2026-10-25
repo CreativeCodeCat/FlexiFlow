@@ -368,7 +368,6 @@ pub unsafe fn text(
         }
         static mut NOMATCHES: NoMatches =
             NoMatches { codepoint: [0; NOMATCHES_LEN], idx: 0 };
-        static mut ELLIPSIS_WIDTH: c_uint = 0;
 
         if (render != 0 && (drw.scheme.is_empty() || w == 0))
             || text.is_empty()
@@ -401,9 +400,15 @@ pub unsafe fn text(
             w -= lpad;
         }
 
-        if ELLIPSIS_WIDTH == 0 && render != 0 {
-            ELLIPSIS_WIDTH = fontset_getwidth(drw, "...");
-        }
+        // measured in the fonts drawing now, not cached: the status text
+        // can swap in other fonts, and an ellipsis measured in a smaller
+        // one wouldn't fit where one in a bigger one is drawn
+        let is_ellipsis = text == "...";
+        let ellipsis_width = if render != 0 {
+            fontset_getwidth(drw, "...")
+        } else {
+            0
+        };
         usedfont = 0;
         log::trace!("text: entering loop");
         'no_match: loop {
@@ -440,7 +445,7 @@ pub unsafe fn text(
                             utf8charlen as u32,
                             &mut tmpw,
                         );
-                        if ew + ELLIPSIS_WIDTH <= w {
+                        if ew + ellipsis_width <= w {
                             // keep track where the ellipsis still fits
                             ellipsis_x = x + ew as i32;
                             ellipsis_w = w - ew;
@@ -500,7 +505,9 @@ pub unsafe fn text(
                 x += ew as i32;
                 w -= ew;
             }
-            if render != 0 && overflow != 0 {
+            // an ellipsis that overflows itself is cut short rather than
+            // ending in another ellipsis
+            if render != 0 && overflow != 0 && !is_ellipsis {
                 log::trace!("recursing for render != && overflow != 0");
                 self::text(drw, ellipsis_x, y, ellipsis_w, h, 0, "...", invert);
             }
