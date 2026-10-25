@@ -1,5 +1,5 @@
 use std::cmp::max;
-use std::ffi::{CStr, c_int, c_uint};
+use std::ffi::{CStr, CString, c_char, c_int, c_uint};
 use std::process::Command;
 use std::ptr::null_mut;
 
@@ -22,9 +22,10 @@ use crate::core::{
     setfullscreen, textw, unfocus, updatebarpos, width, xerror, xerrordummy,
 };
 use crate::drw;
+use x11::keysym::{XK_BackSpace, XK_Escape, XK_KP_Enter, XK_Return};
 use crate::enums::{Col, Scheme, WM};
 use crate::util::{restart_exe, spawn_child};
-use crate::{Arg, Client, Gaps, Layout, Monitor, PowerMenuItem};
+use crate::{Arg, Client, Clr, Gaps, Layout, Monitor, PowerMenuItem};
 use crate::{State, cfor};
 
 /// Shows or hides the bar's tags that have no windows and aren't in view.
@@ -461,59 +462,76 @@ pub(crate) fn powermenu(state: &mut State, _arg: *const Arg) {
     }
 }
 
-/// The popup's title, drawn across its top like the bar.
+/// The popup's title, at its top left beside the search field.
 const HOTKEYS_TITLE: &str = "Keybindings";
 
+/// The search field's text before anything is typed.
+const HOTKEYS_PLACEHOLDER: &str = "\u{F002}  Type to filter";
+
+/// Accents for the `hotkeys` popup's groups that `Hotkeys::groups`
+/// gives no color: soft pastels that sit quietly on a dark background.
+const HOTKEYS_PALETTE: [&str; 7] = [
+    "#89B4FA", "#A6E3A1", "#CBA6F7", "#FAB387", "#F9E2AF", "#94E2D5",
+    "#F38BA8",
+];
+
+/// How much of a group's accent tints its key badges.
+const HOTKEYS_BADGE_TINT: f32 = 0.18;
+
 /// Shows every key binding that has a `desc` in a popup centred on the
-/// selected monitor, like awesome's hotkeys popup: the keys in the
-/// focused accent, each followed by what it does, filling columns top
-/// to bottom. Any key or click closes it.
+/// selected monitor, like awesome's hotkeys popup: each group under a
+/// heading marked in its accent, each key as a row of badges followed
+/// by what it does, filling columns top to bottom.
 ///
-/// It grabs the keyboard and pointer and waits for that key or click
-/// itself, as `movemouse` does, still handling map, configure and
-/// expose requests meanwhile.
+/// Typing filters it to the keys whose combination, description or
+/// group match; Backspace deletes, and Escape, Return, any key held with
+/// Super, Ctrl or Alt, or a click outside it closes it.
+///
+/// It grabs the keyboard and pointer and waits for those itself, as
+/// `movemouse` does, still handling map, configure and expose requests
+/// meanwhile.
 pub(crate) fn hotkeys(state: &mut State, _arg: *const Arg) {
-    let lines = hotkey_lines(&state.config.keys, &state.config.hotkeys_groups);
+    let order: Vec<String> = state
+        .config
+        .hotkeys
+        .groups
+        .iter()
+        .map(|g| g.name.clone())
+        .chain(state.config.hotkeys_groups.iter().cloned())
+        .collect();
+    let keys = state.config.keys.clone();
+    let lines = hotkey_lines(&keys, &order);
     if lines.is_empty() {
         return;
     }
     unsafe {
         let m = &*state.selmon;
-        let lrpad = state.lrpad;
-        let bh = state.bh;
-        let gap = lrpad * 2;
+        let style = HotkeysStyle::new(state, &lines);
+        let pad = state.lrpad;
 
-        // as few columns as fit in 90% of the monitor's height, with the
-        // lines shared out evenly between them
-        let fit = ((m.wh * 9 / 10 - bh - lrpad * 2) / bh).max(2) as usize;
-        let per_col = lines.len().div_ceil(lines.len().div_ceil(fit));
-        let columns = hotkey_columns(&lines, per_col);
-        let rows = columns.iter().map(Vec::len).max().unwrap_or(0);
-        // each column's key and description widths; a heading spans both
-        let widths: Vec<(c_int, c_int)> = columns
-            .iter()
-            .map(|col| {
-                let (mut keys, mut descs, mut heading) = (0, 0, 0);
-                for line in col {
-                    match line {
-                        HotkeyLine::Group(_, g) => {
-                            heading =
-                                heading.max(textw(&mut state.drw, g, lrpad))
-                        }
-                        HotkeyLine::Key(_, k, d) => {
-                            keys = keys.max(textw(&mut state.drw, k, 0));
-                            descs = descs.max(textw(&mut state.drw, d, 0));
-                        }
-                    }
-                }
-                (keys, descs.max(heading - keys - gap))
-            })
-            .collect();
-        let w = (widths.iter().map(|(k, d)| k + gap + d).sum::<c_int>()
-            + gap * (columns.len() as c_int - 1)
-            + lrpad * 2)
-            .max(textw(&mut state.drw, HOTKEYS_TITLE, lrpad));
-        let h = bh + lrpad + rows as c_int * bh + lrpad;
+        // `Hotkeys::columns` columns, with the lines shared out evenly
+        // between them - more if they'd be taller than 90% of the
+        // monitor, fewer if the popup would be wider than it. The popup
+        // keeps the size of the unfiltered list while filtering, so it
+        // doesn't jump
+        let fit = ((m.wh * 9 / 10 - style.top - pad) / state.bh).max(2)
+            as usize;
+        let fewest = lines.len().div_ceil(fit);
+        let mut ncols = state.config.hotkeys.columns.max(fewest);
+        let all: Vec<&HotkeyLine> = lines.iter().collect();
+        let (w, h, per_col) = loop {
+            let mut per_col = lines.len().div_ceil(ncols);
+            // headings moved off a column's bottom take rows too:
+            // lengthen the columns until they fit in as many as planned
+            while hotkey_columns(&all, per_col).len() > ncols {
+                per_col += 1;
+            }
+            let (w, h) = hotkeys_size(state, &style, &all, per_col);
+            if w <= m.ww * 19 / 20 || ncols <= fewest.max(1) {
+                break (w, h, per_col);
+            }
+            ncols -= 1;
+        };
         // the drawable is only as tall as the bar after a screen change
         let (dw, dh) =
             (state.drw.w.max(w as c_uint), state.drw.h.max(h as c_uint));
@@ -521,98 +539,20 @@ pub(crate) fn hotkeys(state: &mut State, _arg: *const Arg) {
             drw::resize(&mut state.drw, dw, dh);
         }
 
-        // the background and title
-        let norm = state.scheme[Scheme::Norm].clone();
-        drw::setscheme(&mut state.drw, norm.clone());
-        drw::rect(&mut state.drw, 0, 0, w as c_uint, h as c_uint, true, true);
-        drw::setscheme(&mut state.drw, state.scheme[Scheme::Sel].clone());
-        let titlew = textw(&mut state.drw, HOTKEYS_TITLE, 0);
-        drw::text(
-            &mut state.drw,
-            0,
-            0,
-            w as c_uint,
-            bh as c_uint,
-            ((w - titlew) / 2).max(0) as c_uint,
-            HOTKEYS_TITLE,
-            0,
-        );
+        let mut query = String::new();
+        draw_hotkeys(state, &style, &lines, &query, per_col, w, h);
 
-        // each group takes the next tag's accent, as its heading's
-        // background and its keys' color; descriptions are in the bar's
-        // text color
-        let group_scheme = |state: &State, group: usize| {
-            if state.tagscheme.is_empty() {
-                state.scheme[Scheme::Sel].clone()
-            } else {
-                state.tagscheme[group % state.tagscheme.len()].clone()
-            }
-        };
-        let mut x = lrpad;
-        for (col, (keysw, descw)) in columns.iter().zip(&widths) {
-            for (i, line) in col.iter().enumerate() {
-                let y = bh + lrpad + i as c_int * bh;
-                match line {
-                    HotkeyLine::Group(group, name) => {
-                        let scheme = group_scheme(state, *group);
-                        drw::setscheme(&mut state.drw, scheme);
-                        drw::text(
-                            &mut state.drw,
-                            x,
-                            y + 2,
-                            (keysw + gap + descw) as c_uint,
-                            (bh - 4) as c_uint,
-                            lrpad as c_uint / 2,
-                            name,
-                            0,
-                        );
-                    }
-                    HotkeyLine::Key(group, keys, desc) => {
-                        let scheme = group_scheme(state, *group);
-                        drw::setscheme(
-                            &mut state.drw,
-                            vec![
-                                scheme[Col::Bg as usize],
-                                norm[Col::Bg as usize],
-                                norm[Col::Border as usize],
-                            ],
-                        );
-                        drw::text(
-                            &mut state.drw,
-                            x,
-                            y,
-                            *keysw as c_uint,
-                            bh as c_uint,
-                            0,
-                            keys,
-                            0,
-                        );
-                        drw::setscheme(&mut state.drw, norm.clone());
-                        drw::text(
-                            &mut state.drw,
-                            x + keysw + gap,
-                            y,
-                            *descw as c_uint,
-                            bh as c_uint,
-                            0,
-                            desc,
-                            0,
-                        );
-                    }
-                }
-            }
-            x += keysw + gap + descw + gap;
-        }
-
+        let x = m.wx + (m.ww - w) / 2 - HOTKEYS_BORDER;
+        let y = m.wy + (m.wh - h) / 2 - HOTKEYS_BORDER;
         let mut wa: xlib::XSetWindowAttributes = std::mem::zeroed();
         wa.override_redirect = True;
-        wa.border_pixel = state.scheme[(Scheme::Sel, Col::Border)].pixel;
+        wa.border_pixel = style.dim.pixel;
         wa.event_mask = ExposureMask;
         let win = xlib::XCreateWindow(
             state.dpy,
             state.root,
-            m.wx + (m.ww - w) / 2 - HOTKEYS_BORDER,
-            m.wy + (m.wh - h) / 2 - HOTKEYS_BORDER,
+            x,
+            y,
             w as c_uint,
             h as c_uint,
             HOTKEYS_BORDER as c_uint,
@@ -656,7 +596,60 @@ pub(crate) fn hotkeys(state: &mut State, _arg: *const Arg) {
                     &mut ev,
                 );
                 match ev.type_ {
-                    xlib::KeyPress | xlib::ButtonPress => break,
+                    // clicking inside, say on the search field, keeps it
+                    // open
+                    xlib::ButtonPress => {
+                        let (px, py) = (ev.button.x_root, ev.button.y_root);
+                        let outside = px < x
+                            || py < y
+                            || px >= x + w + HOTKEYS_BORDER * 2
+                            || py >= y + h + HOTKEYS_BORDER * 2;
+                        if outside {
+                            break;
+                        }
+                    }
+                    xlib::KeyPress => {
+                        let mut buf = [0 as c_char; 8];
+                        let mut keysym: KeySym = 0;
+                        let n = xlib::XLookupString(
+                            &mut ev.key,
+                            buf.as_mut_ptr(),
+                            buf.len() as c_int,
+                            &mut keysym,
+                            null_mut(),
+                        );
+                        let held = ev.key.state
+                            & (Mod4Mask | ControlMask | Mod1Mask);
+                        let typed = (n == 1).then(|| buf[0] as u8 as char);
+                        let keysym = keysym as c_uint;
+                        if held != 0
+                            || [XK_Escape, XK_Return, XK_KP_Enter]
+                                .contains(&keysym)
+                        {
+                            break;
+                        } else if keysym == XK_BackSpace {
+                            query.pop();
+                        } else if let Some(c) = typed
+                            && (c.is_ascii_graphic() || c == ' ')
+                        {
+                            query.push(c);
+                        } else {
+                            // a modifier on its own, or a key that types
+                            // nothing
+                            continue;
+                        }
+                        draw_hotkeys(
+                            state, &style, &lines, &query, per_col, w, h,
+                        );
+                        drw::map(
+                            &state.drw,
+                            win,
+                            0,
+                            0,
+                            w as c_uint,
+                            h as c_uint,
+                        );
+                    }
                     EXPOSE if ev.expose.window == win => drw::map(
                         &state.drw,
                         win,
@@ -687,8 +680,374 @@ pub(crate) fn hotkeys(state: &mut State, _arg: *const Arg) {
     }
 }
 
-/// The popup's border width, in the focused border color.
-const HOTKEYS_BORDER: c_int = 2;
+/// The popup's border width, in `Hotkeys::dim`.
+const HOTKEYS_BORDER: c_int = 1;
+
+/// The `hotkeys` popup's colors and measurements, worked out once each
+/// time it opens.
+struct HotkeysStyle {
+    bg: Clr,
+    fg: Clr,
+    dim: Clr,
+    key_fg: Clr,
+    key_bg: Clr,
+    /// per group, by position: its accent, and its badges' background
+    accents: Vec<(Clr, Clr)>,
+    /// per group, by position: its heading
+    labels: Vec<String>,
+    /// where the list starts, below the title and separator
+    top: c_int,
+}
+
+impl HotkeysStyle {
+    fn new(state: &State, lines: &[HotkeyLine]) -> Self {
+        let cfg = &state.config.hotkeys;
+        let clr = |name: &str, fallback: &str| {
+            [name, fallback]
+                .into_iter()
+                .filter_map(|n| CString::new(n).ok())
+                .find_map(|n| drw::scm_try_create(&state.drw, &[n]))
+                .map(|s| s[0])
+                .unwrap_or(state.scheme[(Scheme::Norm, Col::Bg)])
+        };
+        let defaults = crate::Hotkeys::default();
+        let bg = clr(&cfg.bg, &defaults.bg);
+        let key_bg = clr(&cfg.key_bg, &defaults.key_bg);
+        let (mut accents, mut labels) = (Vec::new(), Vec::new());
+        for line in lines {
+            let HotkeyLine::Group(i, name) = line else { continue };
+            let group = cfg.groups.iter().find(|g| g.name == *name);
+            let palette = HOTKEYS_PALETTE[i % HOTKEYS_PALETTE.len()];
+            let accent = clr(group.map_or("", |g| g.color.as_str()), palette);
+            accents.push((
+                accent,
+                drw::clr_mix(&state.drw, &accent, &key_bg, HOTKEYS_BADGE_TINT),
+            ));
+            labels.push(match group {
+                Some(g) if !g.label.is_empty() => g.label.clone(),
+                _ => capitalized(name),
+            });
+        }
+        let pad = state.lrpad;
+        Self {
+            bg,
+            fg: clr(&cfg.fg, &defaults.fg),
+            dim: clr(&cfg.dim, &defaults.dim),
+            key_fg: clr(&cfg.key_fg, &defaults.key_fg),
+            key_bg,
+            accents,
+            labels,
+            top: pad / 2 + state.bh + pad,
+        }
+    }
+
+    /// A scheme drawing `fg` text on `bg`.
+    fn scheme(fg: Clr, bg: Clr) -> Vec<Clr> {
+        vec![fg, bg, bg]
+    }
+}
+
+/// `name` with its first letter in capitals.
+fn capitalized(name: &str) -> String {
+    let mut chars = name.chars();
+    chars.next().map_or_else(String::new, |c| {
+        c.to_uppercase().chain(chars).collect()
+    })
+}
+
+/// The extra space above a heading that doesn't start its column.
+fn hotkeys_group_gap(state: &State) -> c_int {
+    state.lrpad / 2
+}
+
+/// The gap between a column's keys and its descriptions, and between
+/// columns.
+fn hotkeys_gap(state: &State) -> c_int {
+    state.lrpad * 2
+}
+
+/// The padding either side of a key badge's text, and the space between
+/// badges.
+fn hotkeys_badge_pad(state: &State) -> (c_int, c_int) {
+    (state.lrpad / 3, 3)
+}
+
+/// The width of `keys` drawn as badges.
+fn hotkeys_badges_w(state: &mut State, keys: &str) -> c_int {
+    let (pad, space) = hotkeys_badge_pad(state);
+    let parts = hotkey_parts(keys);
+    let n = parts.len() as c_int;
+    parts
+        .into_iter()
+        .map(|p| textw(&mut state.drw, p, 0) + pad * 2)
+        .sum::<c_int>()
+        + space * (n - 1).max(0)
+}
+
+/// A column's badge and description widths; a heading spans both.
+fn hotkeys_column_w(
+    state: &mut State,
+    style: &HotkeysStyle,
+    col: &[&HotkeyLine],
+) -> (c_int, c_int) {
+    let (mut keys, mut descs, mut heading) = (0, 0, 0);
+    for line in col {
+        match line {
+            HotkeyLine::Group(i, _) => {
+                heading = heading
+                    .max(textw(&mut state.drw, &style.labels[*i], state.lrpad))
+            }
+            HotkeyLine::Key(_, k, d) => {
+                keys = keys.max(hotkeys_badges_w(state, k));
+                descs = descs.max(textw(&mut state.drw, d, 0));
+            }
+        }
+    }
+    (keys, descs.max(heading - keys - hotkeys_gap(state)))
+}
+
+/// A column's height: a row per line, plus a gap above each heading
+/// but its first.
+fn hotkeys_column_h(state: &State, col: &[&HotkeyLine]) -> c_int {
+    col.iter()
+        .enumerate()
+        .map(|(i, line)| match line {
+            HotkeyLine::Group(..) if i > 0 => {
+                state.bh + hotkeys_group_gap(state)
+            }
+            _ => state.bh,
+        })
+        .sum()
+}
+
+/// The popup's size for `lines` in columns of about `per_col` lines.
+fn hotkeys_size(
+    state: &mut State,
+    style: &HotkeysStyle,
+    lines: &[&HotkeyLine],
+    per_col: usize,
+) -> (c_int, c_int) {
+    let pad = state.lrpad;
+    let gap = hotkeys_gap(state);
+    let columns = hotkey_columns(lines, per_col);
+    let widths: c_int = columns
+        .iter()
+        .map(|col| {
+            let (k, d) = hotkeys_column_w(state, style, col);
+            k + gap + d
+        })
+        .sum();
+    let header = textw(&mut state.drw, HOTKEYS_TITLE, 0)
+        + gap
+        + textw(&mut state.drw, HOTKEYS_PLACEHOLDER, pad) * 2;
+    let w = (widths + gap * (columns.len() as c_int - 1)).max(header)
+        + pad * 2;
+    let rows =
+        columns.iter().map(|c| hotkeys_column_h(state, c)).max().unwrap_or(0);
+    (w, style.top + rows + pad)
+}
+
+/// Draws the popup, `lines` filtered by `query`, into `state.drw`.
+unsafe fn draw_hotkeys(
+    state: &mut State,
+    style: &HotkeysStyle,
+    lines: &[HotkeyLine],
+    query: &str,
+    per_col: usize,
+    w: c_int,
+    h: c_int,
+) {
+    let pad = state.lrpad;
+    let bh = state.bh;
+    let gap = hotkeys_gap(state);
+    let (badge_pad, badge_space) = hotkeys_badge_pad(state);
+    let scheme = HotkeysStyle::scheme;
+
+    unsafe {
+        // the background
+        drw::setscheme(&mut state.drw, scheme(style.bg, style.bg));
+        drw::rect(&mut state.drw, 0, 0, w as c_uint, h as c_uint, true, false);
+
+        // the title, the search field to its right, and a line under both
+        let y = pad / 2;
+        let titlew = textw(&mut state.drw, HOTKEYS_TITLE, 0);
+        drw::setscheme(&mut state.drw, scheme(style.fg, style.bg));
+        drw::text(
+            &mut state.drw,
+            pad,
+            y,
+            titlew as c_uint,
+            bh as c_uint,
+            0,
+            HOTKEYS_TITLE,
+            0,
+        );
+        let fieldw = textw(&mut state.drw, HOTKEYS_PLACEHOLDER, pad) * 2;
+        let (text, fg) = if query.is_empty() {
+            (HOTKEYS_PLACEHOLDER.to_string(), style.dim)
+        } else {
+            (format!("\u{F002}  {query}_"), style.fg)
+        };
+        drw::setscheme(&mut state.drw, scheme(fg, style.key_bg));
+        drw::text(
+            &mut state.drw,
+            w - pad - fieldw,
+            y + 2,
+            fieldw as c_uint,
+            (bh - 4) as c_uint,
+            (pad / 2) as c_uint,
+            &text,
+            0,
+        );
+        drw::setscheme(&mut state.drw, scheme(style.dim, style.bg));
+        drw::rect(
+            &mut state.drw,
+            pad,
+            y + bh + pad / 2,
+            (w - pad * 2) as c_uint,
+            1,
+            true,
+            false,
+        );
+
+        let shown = hotkey_filter(lines, query, &style.labels);
+        if shown.is_empty() {
+            drw::setscheme(&mut state.drw, scheme(style.dim, style.bg));
+            drw::text(
+                &mut state.drw,
+                pad,
+                style.top,
+                (w - pad * 2) as c_uint,
+                bh as c_uint,
+                0,
+                &format!("No keybindings match \u{201C}{query}\u{201D}"),
+                0,
+            );
+            return;
+        }
+
+        let mut x = pad;
+        for col in hotkey_columns(&shown, per_col) {
+            let (keysw, descw) = hotkeys_column_w(state, style, &col);
+            let mut y = style.top;
+            for (i, line) in col.iter().enumerate() {
+                match line {
+                    HotkeyLine::Group(group, _) => {
+                        if i > 0 {
+                            y += hotkeys_group_gap(state);
+                        }
+                        // a slim bar in the accent, then the heading in it
+                        let (accent, _) = style.accents[*group];
+                        drw::setscheme(
+                            &mut state.drw,
+                            scheme(accent, style.bg),
+                        );
+                        drw::rect(
+                            &mut state.drw,
+                            x,
+                            y + bh / 5,
+                            3,
+                            (bh - bh / 5 * 2) as c_uint,
+                            true,
+                            false,
+                        );
+                        drw::text(
+                            &mut state.drw,
+                            x + 3,
+                            y,
+                            (keysw + gap + descw - 3) as c_uint,
+                            bh as c_uint,
+                            (pad / 2) as c_uint,
+                            &style.labels[*group],
+                            0,
+                        );
+                    }
+                    HotkeyLine::Key(group, keys, desc) => {
+                        let (_, badge_bg) = style.accents[*group];
+                        drw::setscheme(
+                            &mut state.drw,
+                            scheme(style.key_fg, badge_bg),
+                        );
+                        let mut bx = x;
+                        for part in hotkey_parts(keys) {
+                            let bw =
+                                textw(&mut state.drw, part, 0) + badge_pad * 2;
+                            drw::text(
+                                &mut state.drw,
+                                bx,
+                                y + 3,
+                                bw as c_uint,
+                                (bh - 6) as c_uint,
+                                badge_pad as c_uint,
+                                part,
+                                0,
+                            );
+                            bx += bw + badge_space;
+                        }
+                        drw::setscheme(
+                            &mut state.drw,
+                            scheme(style.fg, style.bg),
+                        );
+                        drw::text(
+                            &mut state.drw,
+                            x + keysw + gap,
+                            y,
+                            descw as c_uint,
+                            bh as c_uint,
+                            0,
+                            desc,
+                            0,
+                        );
+                    }
+                }
+                y += bh;
+            }
+            x += keysw + gap + descw + gap;
+        }
+    }
+}
+
+/// `keys`' modifiers and key, one per badge: `Super+Shift+J` is `Super`,
+/// `Shift` and `J`. A `+` at the end is the key itself.
+fn hotkey_parts(keys: &str) -> Vec<&str> {
+    match keys.strip_suffix("++") {
+        Some(mods) => mods.split('+').chain(["+"]).collect(),
+        None => keys.split('+').filter(|p| !p.is_empty()).collect(),
+    }
+}
+
+/// The lines whose keys, description, group or heading contain `query`,
+/// ignoring case, under their headings; all of them for an empty query.
+/// A group whose name or heading matches keeps all its keys.
+fn hotkey_filter<'a, 'b>(
+    lines: &'b [HotkeyLine<'a>],
+    query: &str,
+    labels: &[String],
+) -> Vec<&'b HotkeyLine<'a>> {
+    let query = query.trim().to_lowercase();
+    let has = |s: &str| s.to_lowercase().contains(&query);
+    let mut shown = Vec::new();
+    let mut heading = None;
+    let mut whole_group = false;
+    for line in lines {
+        match line {
+            HotkeyLine::Group(i, name) => {
+                heading = Some(line);
+                whole_group =
+                    has(name) || labels.get(*i).is_some_and(|l| has(l));
+            }
+            HotkeyLine::Key(_, keys, desc) => {
+                if whole_group || has(keys) || has(desc) {
+                    if let Some(h) = heading.take() {
+                        shown.push(h);
+                    }
+                    shown.push(line);
+                }
+            }
+        }
+    }
+    shown
+}
 
 /// A line of the hotkeys popup: a group's heading, or one of its keys
 /// with its description. Both carry the group's position, which picks
@@ -702,7 +1061,7 @@ enum HotkeyLine<'a> {
 /// Every described key under its group's heading, the groups in the
 /// order `order` lists them and then in the order they're first bound,
 /// and keys without a group last under "other". Keys that share their group, modifiers and description,
-/// like the tag keys, share a line: `Super+1..0`.
+/// like the tag keys, share a line: `Super+0-9`.
 fn hotkey_lines<'a>(keys: &'a [Key], order: &[String]) -> Vec<HotkeyLine<'a>> {
     let mut groups: Vec<(&str, Vec<(c_uint, &str, Vec<String>)>)> = Vec::new();
     let described = keys.iter().filter(|k| !k.desc.is_empty());
@@ -739,7 +1098,15 @@ fn hotkey_lines<'a>(keys: &'a [Key], order: &[String]) -> Vec<HotkeyLine<'a>> {
             let keys = match names.as_slice() {
                 [one] => one.clone(),
                 [a, b] => format!("{a}/{b}"),
-                [first, .., last] => format!("{first}..{last}"),
+                // the tag keys, 1 to 9 then 0, are all ten digits
+                all if all.len() == 10
+                    && all.iter().all(|n| {
+                        n.len() == 1 && n.as_bytes()[0].is_ascii_digit()
+                    }) =>
+                {
+                    "0-9".to_string()
+                }
+                [first, .., last] => format!("{first}-{last}"),
                 [] => unreachable!(),
             };
             lines.push(HotkeyLine::Key(
@@ -755,11 +1122,11 @@ fn hotkey_lines<'a>(keys: &'a [Key], order: &[String]) -> Vec<HotkeyLine<'a>> {
 /// `lines` split into columns of about `per_col` lines, never ending a
 /// column on a heading: it moves to the top of the next one instead.
 fn hotkey_columns<'a, 'b>(
-    lines: &'b [HotkeyLine<'a>],
+    lines: &[&'b HotkeyLine<'a>],
     per_col: usize,
 ) -> Vec<Vec<&'b HotkeyLine<'a>>> {
     let mut columns: Vec<Vec<&HotkeyLine>> = vec![Vec::new()];
-    for line in lines {
+    for &line in lines {
         let col = columns.last_mut().unwrap();
         let heading_at_bottom =
             matches!(line, HotkeyLine::Group(..)) && col.len() + 1 >= per_col;
@@ -1471,7 +1838,7 @@ mod tests {
             hotkey_lines(&keys, &[]),
             [
                 HotkeyLine::Group(0, "tag"),
-                HotkeyLine::Key(0, "Super+1..0".into(), "View tag"),
+                HotkeyLine::Key(0, "Super+1-0".into(), "View tag"),
                 HotkeyLine::Group(1, "other"),
                 HotkeyLine::Key(1, "AudioPlay".into(), "Play"),
             ]
@@ -1498,6 +1865,48 @@ mod tests {
     }
 
     #[test]
+    fn hotkey_lines_show_all_ten_tag_keys_as_a_digit_range() {
+        use x11::keysym::{XK_0, XK_9};
+        let keys: Vec<_> = (XK_0..=XK_9)
+            .map(|k| described(Mod4Mask, k, "View tag", "tag"))
+            .collect();
+        assert_eq!(
+            hotkey_lines(&keys, &[])[1],
+            HotkeyLine::Key(0, "Super+0-9".into(), "View tag")
+        );
+    }
+
+    #[test]
+    fn hotkey_parts_split_the_modifiers_from_the_key() {
+        assert_eq!(hotkey_parts("Super+Shift+J"), ["Super", "Shift", "J"]);
+        assert_eq!(hotkey_parts("AudioPlay"), ["AudioPlay"]);
+        assert_eq!(hotkey_parts("Super++"), ["Super", "+"]);
+    }
+
+    #[test]
+    fn hotkey_filter_keeps_matching_keys_under_their_headings() {
+        let lines = [
+            HotkeyLine::Group(0, "media"),
+            HotkeyLine::Key(0, "AudioRaiseVolume".into(), "Volume up"),
+            HotkeyLine::Key(0, "AudioPlay".into(), "Play/pause"),
+            HotkeyLine::Group(1, "gaps"),
+            HotkeyLine::Key(1, "Super+G".into(), "Toggle gaps"),
+        ];
+        let labels = ["Media".to_string(), "Gaps".to_string()];
+        assert_eq!(
+            hotkey_filter(&lines, "VOLUME", &labels),
+            [&lines[0], &lines[1]]
+        );
+        // a group's heading matching keeps all its keys
+        assert_eq!(
+            hotkey_filter(&lines, "gap", &labels),
+            [&lines[3], &lines[4]]
+        );
+        assert_eq!(hotkey_filter(&lines, "", &labels).len(), lines.len());
+        assert!(hotkey_filter(&lines, "nothing", &labels).is_empty());
+    }
+
+    #[test]
     fn hotkey_columns_move_a_heading_off_the_bottom() {
         let key = |d| HotkeyLine::Key(0, String::new(), d);
         let lines = [
@@ -1507,6 +1916,7 @@ mod tests {
             HotkeyLine::Group(1, "b"),
             key("3"),
         ];
+        let lines: Vec<_> = lines.iter().collect();
         let columns = hotkey_columns(&lines, 4);
         assert_eq!(columns.len(), 2);
         assert_eq!(columns[0].len(), 3);

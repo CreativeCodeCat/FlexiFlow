@@ -2377,17 +2377,70 @@ Config {
         "-z",
         "222",
     ],
-    hotkeys_groups: [
-        "flexiflow",
-        "bar",
-        "tag",
-        "client",
-        "layout",
-        "screen",
-        "launcher",
-        "scratchpad",
-        "screenshot",
-        "media",
-        "gaps",
-    ],
+    hotkeys: Hotkeys {
+        bg: "#1E222A",
+        fg: "#E0E0E0",
+        dim: "#7A8290",
+        key_fg: "#ECEFF4",
+        key_bg: "#2E3440",
+        columns: 4,
+        groups: [
+            HotkeyGroup {
+                name: "launcher",
+                label: "Apps & Launchers",
+                color: "#A6E3A1",
+            },
+            HotkeyGroup {
+                name: "client",
+                label: "Windows",
+                color: "#89B4FA",
+            },
+            HotkeyGroup {
+                name: "flexiflow",
+                label: "System",
+                color: "#CBA6F7",
+            },
+            HotkeyGroup {
+                name: "layout",
+                label: "Layouts",
+                color: "#89B4FA",
+            },
+            HotkeyGroup {
+                name: "tag",
+                label: "Tags",
+                color: "#89B4FA",
+            },
+            HotkeyGroup {
+                name: "screen",
+                label: "Monitors",
+                color: "#89B4FA",
+            },
+            HotkeyGroup {
+                name: "gaps",
+                label: "Gaps",
+                color: "#89B4FA",
+            },
+            HotkeyGroup {
+                name: "scratchpad",
+                label: "Scratchpads",
+                color: "#A6E3A1",
+            },
+            HotkeyGroup {
+                name: "screenshot",
+                label: "Screenshots",
+                color: "#A6E3A1",
+            },
+            HotkeyGroup {
+                name: "bar",
+                label: "Bar",
+                color: "#CBA6F7",
+            },
+            HotkeyGroup {
+                name: "media",
+                label: "Media",
+                color: "#FAB387",
+            },
+        ],
+    },
+    hotkeys_groups: [],
 }

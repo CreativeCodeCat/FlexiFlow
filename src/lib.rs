@@ -187,6 +187,55 @@ pub struct PowerMenu {
     pub items: Vec<PowerMenuItem>,
 }
 
+/// The `hotkeys` popup's look: its colors, and the order, headings and
+/// accent colors of its groups.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(default)]
+pub struct Hotkeys {
+    /// the popup's background
+    pub bg: String,
+    /// descriptions, the title and typed search text
+    pub fg: String,
+    /// the border, the search placeholder and the separator line
+    pub dim: String,
+    /// key badges' text
+    pub key_fg: String,
+    /// key badges' background, tinted with their group's accent
+    pub key_bg: String,
+    /// how many columns to list the keys in: more if they'd be taller
+    /// than the monitor, fewer if the popup would be wider than it
+    pub columns: usize,
+    /// the groups in the order they're shown; any not listed follow
+    /// in the order they're first bound
+    pub groups: Vec<HotkeyGroup>,
+}
+
+impl Default for Hotkeys {
+    fn default() -> Self {
+        Self {
+            bg: "#1E222A".into(),
+            fg: "#E0E0E0".into(),
+            dim: "#7A8290".into(),
+            key_fg: "#ECEFF4".into(),
+            key_bg: "#2E3440".into(),
+            columns: 4,
+            groups: Vec::new(),
+        }
+    }
+}
+
+/// One `Hotkeys` group: the keys bound with `name` as their group are
+/// listed under `label` (`name` capitalized without one), marked in
+/// `color` (one of a pastel palette without one).
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct HotkeyGroup {
+    pub name: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub color: String,
+}
+
 /// One `PowerMenu` entry: the menu shows `label`, and picking it runs
 /// `command` through `sh -c`.
 #[derive(Debug, Clone, serde::Deserialize)]

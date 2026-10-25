@@ -10,7 +10,7 @@ use env::{CLICKS, HANDLERS, KEYS, XKEYS};
 use mlua::{Lua, LuaSerdeExt as _, Table};
 
 use crate::{
-    Button, Layout, PowerMenu, Rule, ScratchSpec, config::key::Key,
+    Button, Hotkeys, Layout, PowerMenu, Rule, ScratchSpec, config::key::Key,
     enums::Scheme,
 };
 
@@ -210,8 +210,11 @@ pub struct Config {
     /// of items>` are added for each menu.
     #[serde(default = "default_menu")]
     pub menu: Vec<String>,
-    /// The order of the `hotkeys` popup's groups; groups not listed
-    /// follow in the order they're first bound.
+    /// The `hotkeys` popup's colors and groups - see `Hotkeys`.
+    #[serde(default)]
+    pub hotkeys: Hotkeys,
+    /// More of the `hotkeys` popup's group order, after the ones
+    /// `hotkeys.groups` lists; kept for older configs.
     #[serde(default)]
     pub hotkeys_groups: Vec<String>,
 }

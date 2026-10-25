@@ -25,8 +25,8 @@ configuration.
   desktop, network, volume and the clock.
 - **Scratchpads**: any number of named scratchpads, each toggled on its
   own, matched by window class and started on first use.
-- **Hotkeys popup**: `modkey` + `/` shows every described keybinding,
-  grouped and colored by tag accent.
+- **Hotkeys popup**: `modkey` + `/` shows every described keybinding
+  as key badges under color-coded headings, with type-to-filter search.
 - **Restart in place**: reload a rebuilt binary or an edited config
   without logging out; open windows survive.
 - Multi-monitor support, a system tray, and window swallowing (a
@@ -96,15 +96,35 @@ that color while it's selected.
 
 ### Hotkeys popup
 
+`modkey` + `/` lists every keybinding that has a description. Type to
+filter it (for example "volume", "gap" or "tag"), Backspace to delete,
+and Escape, Return or a click outside it to close it.
+
 A keybinding's optional fifth and sixth arguments describe it and name
-its group, for the `modkey` + `/` popup:
+its group:
 
 ```lua
 key(modkey, XK_Return, spawn, { V = termcmd }, "Open a terminal", "launcher")
 ```
 
-Groups appear in the order `hotkeys_groups` lists them, then any others
-in the order they're first bound.
+The `hotkeys` table sets the popup's colors and the order, headings
+and accent colors of its groups:
+
+```lua
+hotkeys = {
+    bg = "#1E222A", fg = "#E0E0E0", dim = "#7A8290",
+    key_fg = "#ECEFF4", key_bg = "#2E3440",
+    columns = 4,
+    groups = {
+        { name = "launcher", label = "Apps & Launchers", color = "#A6E3A1" },
+        { name = "client", label = "Windows", color = "#89B4FA" },
+        -- ...
+    },
+},
+```
+
+Groups not listed follow in the order they're first bound, under
+their capitalized name.
 
 ## Key bindings
 
@@ -135,7 +155,7 @@ in the order they're first bound.
 | Alt + `Return`/`b` | Toggle the terminal/btop scratchpad |
 | `modkey` + `b` | Show/hide the bar |
 | `modkey` + `w` | Show/hide empty tags that aren't in view |
-| `modkey` + `/` | Show the hotkeys popup |
+| `modkey` + `/` | Show the hotkeys popup (type to filter) |
 | `s_mod` + `r` | Quit |
 | `Alt+Ctrl` + `r` | Restart in place, reloading the binary and config |
 
