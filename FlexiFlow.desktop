@@ -1,7 +1,7 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=FlexiFlow
-Comment=FlexiFlow Session
+Name=FlexiFlow (X11)
+Comment=FlexiFlow's window management on X11
 Icon=flexiflow
 Exec=FlexiFlow
 Type=XSession

@@ -315,37 +315,7 @@ pub struct Layout {
     pub color: String,
 }
 
-/// Per-tag/per-monitor gap configuration, matching flexiflow's vanitygaps
-/// behavior.
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Gaps {
-    /// Outer horizontal gap (top/bottom screen edge)
-    pub oh: c_int,
-    /// Outer vertical gap (left/right screen edge)
-    pub ov: c_int,
-    /// Inner horizontal gap (between stacked clients)
-    pub ih: c_int,
-    /// Inner vertical gap (between master/stack columns)
-    pub iv: c_int,
-    pub enabled: bool,
-    /// Collapse outer gaps to 0 when there's a single client
-    pub smartgaps: bool,
-}
-
-impl Gaps {
-    /// Effective gaps for `n` clients.
-    pub fn effective(&self, n: usize) -> (c_int, c_int, c_int, c_int) {
-        let outer_enabled = !(self.smartgaps && n == 1) && self.enabled;
-        let inner_enabled = self.enabled;
-        (
-            self.oh * outer_enabled as c_int,
-            self.ov * outer_enabled as c_int,
-            self.ih * inner_enabled as c_int,
-            self.iv * inner_enabled as c_int,
-        )
-    }
-}
+pub use flexiflow_common::layouts::Gaps;
 
 #[derive(Clone, Debug)]
 pub struct Pertag {

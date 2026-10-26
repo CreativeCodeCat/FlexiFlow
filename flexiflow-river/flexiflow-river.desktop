@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=FlexiFlow (Wayland)
+Comment=FlexiFlow's window management on the river Wayland compositor
+Exec=flexiflow-river --session
+Type=Application
+DesktopNames=FlexiFlow

@@ -44,8 +44,18 @@ Building needs a Rust toolchain (see `rust-toolchain.toml`), Lua 5.4,
 and the Xlib, Xft, Xinerama and fontconfig development headers.
 
 `make install` installs `FlexiFlow`, `flexiflow_bar`, and an X session
-entry so display managers offer "FlexiFlow" as a session. `sudo make
+entry so display managers offer "FlexiFlow" as a session. It also
+installs the Wayland build (river 0.5 or later) and its "FlexiFlow
+(Wayland)" session, so the login screen offers both; see
+[flexiflow-river/README.md](flexiflow-river/README.md). `sudo make
 uninstall` removes them.
+
+The repository is a Cargo workspace: the X11 window manager at the top,
+[flexiflow-river/](flexiflow-river) for river, and
+[flexiflow-common/](flexiflow-common) for what they share (the layout
+algorithms, the Lua config used by the river build, IPC, status text and
+drawing). Each keeps its own config: `~/.config/flexiflow/config.lua`
+for X11 and `~/.config/flexiflow-river/config.lua` for Wayland.
 
 ## Running
 

@@ -1,0 +1,17 @@
+[package]
+name = "flexiflow-common"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+description = "What FlexiFlow's X11 and river builds share: the layouts, the Lua config, the IPC format, status text and drawing"
+license-file = "LICENSE"
+
+[lib]
+name = "flexiflow_common"
+
+[dependencies]
+fontdue = "0.9"
+log = "0.4.29"
+mlua = { version = "0.11.6", features = ["lua54", "serialize"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1"

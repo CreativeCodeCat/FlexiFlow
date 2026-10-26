@@ -5,11 +5,15 @@ edition = "2024"
 rust-version = "1.92"
 description = "A tiling window manager based on dwm"
 
+[workspace]
+members = [".", "flexiflow-common", "flexiflow-river"]
+
 [lib]
 name = "flexiflow"
 path = "src/lib.rs"
 
 [dependencies]
+flexiflow-common = { path = "flexiflow-common" }
 x11 = { version = "2.21.0", features = ["xlib", "xft", "xinerama"] }
 libc = "0.2.185"
 yeslogic-fontconfig-sys = "6.0.0"
