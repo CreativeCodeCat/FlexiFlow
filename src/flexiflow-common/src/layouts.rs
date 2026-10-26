@@ -1,8 +1,8 @@
-//! flexiflow's vanitygaps-derived layout algorithms, carried over from
-//! the X11 FlexiFlow unchanged. Each pure `fn(..) -> Vec<R>` computes
-//! where the `n` tiled windows go inside the area `r`; `arrange` picks
-//! one by name. Unlike the X11 version, the rects include each window's
-//! border: the window manager insets them by the border width itself.
+//! flexiflow's vanitygaps-derived layout algorithms, shared by the X11
+//! and river builds. Each pure `fn(..) -> Vec<R>` computes where the `n`
+//! tiled windows go inside the area `r`; `arrange` picks one by name.
+//! The rects include each window's border: each window manager insets
+//! them by the border width itself.
 use std::ffi::{c_int, c_uint};
 
 /// (x, y, w, h)
