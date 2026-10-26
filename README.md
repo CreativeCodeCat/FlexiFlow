@@ -47,12 +47,13 @@ and the Xlib, Xft, Xinerama and fontconfig development headers.
 entry so display managers offer "FlexiFlow" as a session. It also
 installs the Wayland build (river 0.5 or later) and its "FlexiFlow
 (Wayland)" session, so the login screen offers both; see
-[flexiflow-river/README.md](flexiflow-river/README.md). `sudo make
+[src/flexiflow-river/README.md](src/flexiflow-river/README.md). `sudo make
 uninstall` removes them.
 
-The repository is a Cargo workspace: the X11 window manager at the top,
-[flexiflow-river/](flexiflow-river) for river, and
-[flexiflow-common/](flexiflow-common) for what they share (the layout
+The repository is a Cargo workspace of three crates under `src/`:
+[src/flexiflow-x11/](src/flexiflow-x11) for the X11 window manager,
+[src/flexiflow-river/](src/flexiflow-river) for river, and
+[src/flexiflow-common/](src/flexiflow-common) for what they share (the layout
 algorithms, the Lua config used by the river build, IPC, status text and
 drawing). Each keeps its own config: `~/.config/flexiflow/config.lua`
 for X11 and `~/.config/flexiflow-river/config.lua` for Wayland.
@@ -74,13 +75,13 @@ From scripts:
 
 ## Configuration
 
-The defaults are built in from [src/config.lua](src/config.lua). To
+The defaults are built in from [src/flexiflow-x11/src/config.lua](src/flexiflow-x11/src/config.lua). To
 change them, copy it to `~/.config/flexiflow/config.lua` (or
 `$XDG_CONFIG_HOME/flexiflow/config.lua`) and edit it. It's read on
 every start and restart.
 
 `flexiflow_bar` works the same way: its defaults come from
-[src/bin/flexiflow_bar/bar.lua](src/bin/flexiflow_bar/bar.lua), and
+[src/flexiflow-x11/src/bin/flexiflow_bar/bar.lua](src/flexiflow-x11/src/bin/flexiflow_bar/bar.lua), and
 `~/.config/flexiflow/bar.lua` overrides them:
 
 ```lua
@@ -139,7 +140,7 @@ their capitalized name.
 ## Key bindings
 
 `modkey` is Super and `s_mod` is Shift+Super. These are the highlights;
-[src/config.lua](src/config.lua) has the full list.
+[src/flexiflow-x11/src/config.lua](src/flexiflow-x11/src/config.lua) has the full list.
 
 | Keys | Action |
 |---|---|

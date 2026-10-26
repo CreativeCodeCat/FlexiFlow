@@ -1,6 +1,6 @@
 # flexiflow-river
 
-[FlexiFlow](..)'s window management, rebuilt for the
+[FlexiFlow](../..)'s window management, rebuilt for the
 [river](https://codeberg.org/river/river) Wayland compositor. River 0.5
 leaves every window management decision to a separate client speaking
 `river-window-management-v1`; `flexiflow-river` is that client, written
