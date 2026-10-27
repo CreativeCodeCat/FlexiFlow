@@ -21,8 +21,7 @@ repository builds it as part of the workspace.
   walks its client list and takes off each border width.
 - **[config](src/config.rs)**: the river build's Lua config. The
   built-in [config.lua](src/config.lua) runs first, then the user's
-  `~/.config/flexiflow-river/config.lua`, falling back to the X11
-  `~/.config/flexiflow/config.lua`. [keysyms](src/config/keysyms.rs) is
+  `~/.config/flexiflow/config.lua`, the same file the X11 build reads. [keysyms](src/config/keysyms.rs) is
   the `XK_*` name table the config's keys use. The X11 build still reads
   its own config with its own loader.
 - **[ipc](src/ipc.rs)**: the one-line-per-message protocol on the river

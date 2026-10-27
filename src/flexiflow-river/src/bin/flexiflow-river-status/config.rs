@@ -60,20 +60,18 @@ fn from_lua_source(src: &str) -> Result<BarConfig, Box<dyn std::error::Error>> {
     Ok(lua.from_value(value)?)
 }
 
-/// `flexiflow-river/`, or the X11 FlexiFlow's `flexiflow/` when only it
-/// has a bar.lua, so one bar config can serve both.
+/// `flexiflow/`, the X11 FlexiFlow's config directory, so one bar
+/// config serves both.
 fn config_dir() -> Option<PathBuf> {
     let base = match std::env::var("XDG_CONFIG_HOME") {
         Ok(xdg) if !xdg.is_empty() => PathBuf::from(xdg),
         _ => PathBuf::from(std::env::var("HOME").ok()?).join(".config"),
     };
-    let own = base.join("flexiflow-river");
-    let x11 = base.join("flexiflow");
-    Some(if !own.join("bar.lua").exists() && x11.join("bar.lua").exists() { x11 } else { own })
+    Some(base.join("flexiflow"))
 }
 
 /// Load the baked-in default config, then layer
-/// `$XDG_CONFIG_HOME/flexiflow-river/bar.lua` over it if present - same
+/// `$XDG_CONFIG_HOME/flexiflow/bar.lua` over it if present - same
 /// "quiet if simply absent, loud if present-but-broken" behavior as
 /// the window manager's own `Config::load_home`.
 pub fn load() -> BarConfig {

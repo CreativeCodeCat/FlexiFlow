@@ -55,8 +55,8 @@ The repository is a Cargo workspace of three crates under `src/`:
 [src/flexiflow-river/](src/flexiflow-river) for river, and
 [src/flexiflow-common/](src/flexiflow-common) for what they share (the layout
 algorithms, the Lua config used by the river build, IPC, status text and
-drawing). Each keeps its own config: `~/.config/flexiflow/config.lua`
-for X11 and `~/.config/flexiflow-river/config.lua` for Wayland.
+drawing). Both read the same config, `~/.config/flexiflow/config.lua`;
+it can check `wm` (`"x11"` or `"river"`) for anything that differs.
 
 ## Using it
 

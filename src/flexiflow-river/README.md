@@ -49,14 +49,14 @@ they'll call it river.)
 
 ## Configuration
 
-`~/.config/flexiflow-river/config.lua` is read on every start and
-restart. If it doesn't exist but the X11 FlexiFlow's
-`~/.config/flexiflow/config.lua` does, that's read instead, unchanged,
-so one config can drive both. The settings that only meant something
-under X (the systray, `resize_hints`, `snap`) are ignored, and
-`flexiflow_bar` in `autostart` or `statusclick` runs
-`flexiflow-river-status` instead. Without either file, the built-in
-[flexiflow-common/src/config.lua](../flexiflow-common/src/config.lua) is written to the first location.
+`~/.config/flexiflow/config.lua`, the same file the X11 FlexiFlow
+reads, is read on every start and restart, so one config drives both;
+`wm` is `"river"` here and `"x11"` there, for anything that differs.
+The settings that only mean something under X (`resize_hints`, `snap`)
+are ignored, and `flexiflow_bar` in `autostart` or `statusclick` runs
+`flexiflow-river-status` instead. Without the file, the built-in
+[flexiflow-common/src/config.lua](../flexiflow-common/src/config.lua)
+is written there.
 
 The settings river adds:
 
@@ -82,8 +82,8 @@ To check an edited config before restarting:
 cargo run -p flexiflow-river --example check_config
 ```
 
-`flexiflow-river-status` reads `~/.config/flexiflow-river/bar.lua`,
-falling back to `~/.config/flexiflow/bar.lua`.
+`flexiflow-river-status` reads `~/.config/flexiflow/bar.lua`, the X11
+bar's file.
 
 ## Scripting
 

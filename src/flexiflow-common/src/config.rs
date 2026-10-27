@@ -16,7 +16,7 @@ use mlua::{Lua, LuaSerdeExt as _};
 pub mod keysyms;
 
 /// The baked-in default config, also used to seed
-/// `~/.config/flexiflow-river/config.lua` on first run.
+/// `~/.config/flexiflow/config.lua` on first run.
 pub const DEFAULT_LUA: &str = include_str!("config.lua");
 
 /// The functions a key or button can be bound to, installed in Lua as
@@ -570,16 +570,14 @@ impl Config {
         Ok(lua.from_value(lua.globals().get("flexiflow")?)?)
     }
 
-    /// `~/.config/flexiflow-river/config.lua`, else the X11 FlexiFlow's
-    /// `~/.config/flexiflow/config.lua`, so one config can drive both.
+    /// `~/.config/flexiflow/config.lua`, the same file the X11
+    /// FlexiFlow reads, so one config drives both.
     pub fn path() -> Option<PathBuf> {
         let base = match std::env::var("XDG_CONFIG_HOME") {
             Ok(x) if !x.is_empty() => PathBuf::from(x),
             _ => PathBuf::from(std::env::var("HOME").ok()?).join(".config"),
         };
-        let own = base.join("flexiflow-river").join("config.lua");
-        let x11 = base.join("flexiflow").join("config.lua");
-        Some(if !own.exists() && x11.exists() { x11 } else { own })
+        Some(base.join("flexiflow").join("config.lua"))
     }
 
     /// The user's config, seeding it with the default on first run; the
