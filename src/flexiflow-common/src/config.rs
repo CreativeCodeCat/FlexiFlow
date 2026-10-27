@@ -544,6 +544,9 @@ pub fn parse_color(s: &str) -> Option<(u8, u8, u8, u8)> {
 fn new_lua() -> Lua {
     let lua = Lua::new();
     let globals = lua.globals();
+    // which window manager is reading the config, so one config.lua
+    // shared with the X11 FlexiFlow can pick per-session commands
+    globals.set("wm", "river").unwrap();
     for name in HANDLERS.iter().chain(crate::layouts::ARRANGE.iter().map(|(n, _)| n)) {
         globals.set(*name, *name).unwrap();
     }

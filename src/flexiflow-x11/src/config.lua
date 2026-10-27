@@ -1,5 +1,8 @@
 -- FlexiFlow config, baked in as the defaults rather than left for a
 -- user config file to override at runtime.
+--
+-- `wm` is "x11" under FlexiFlow and "river" under flexiflow-river, so one
+-- config.lua can drive both: `if wm == "river" then ... end`.
 -- Constructor functions ------------------------------------------------
 -- `desc`, if given, is what the binding does: `hotkeys` lists every
 -- binding that has one, under the heading `group`

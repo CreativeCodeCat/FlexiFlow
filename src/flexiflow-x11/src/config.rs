@@ -264,6 +264,10 @@ impl ConfigBuilder {
         let lua = Lua::new();
         let globals = lua.globals();
 
+        // which window manager is reading the config, so one config.lua
+        // shared with flexiflow-river can pick per-session commands
+        globals.set("wm", "x11").unwrap();
+
         // install handler functions for keybindings
         for (k, v) in HANDLERS {
             globals.set(k, v).unwrap();

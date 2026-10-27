@@ -2,6 +2,9 @@
 -- the built-in defaults; ~/.config/flexiflow-river/config.lua (or, if
 -- that doesn't exist, the X11 FlexiFlow's ~/.config/flexiflow/config.lua)
 -- runs after this file and can change any of it.
+--
+-- `wm` is "x11" under FlexiFlow and "river" under flexiflow-river, so one
+-- config.lua can drive both: `if wm == "river" then ... end`.
 -- Constructor functions ------------------------------------------------
 -- `desc`, if given, is what the binding does: `hotkeys` lists every
 -- binding that has one, under the heading `group`

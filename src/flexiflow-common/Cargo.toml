@@ -1,6 +1,6 @@
 [package]
 name = "flexiflow-common"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.92"
 description = "What FlexiFlow's X11 and river builds share: the layouts, the Lua config, the IPC format, status text and drawing"
