@@ -1,0 +1,37 @@
+#!/bin/sh
+# flexiflow-shot: screenshots with ksnip, for both FlexiFlow (X11) and
+# flexiflow-river, taking win-shot's flags so the same key bindings work:
+#
+#   flexiflow-shot -w   the focused window
+#   flexiflow-shot -s   a region picked with the mouse
+#   flexiflow-shot -f   the whole screen
+#
+# Each is saved to $FLEXIFLOW_SHOT_DIR (~/Pictures/Screenshots by
+# default), copied to the clipboard, and announced with notify-send.
+
+set -u
+
+dir=${FLEXIFLOW_SHOT_DIR:-$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots}
+mkdir -p "$dir" || exit 1
+file=$dir/$(date +%Y-%m-%d_%H-%M-%S).png
+
+case ${1:-} in
+-w) mode=--active ;;
+-s) mode=--rectarea ;;
+-f) mode=--fullscreen ;;
+*)
+	echo "usage: flexiflow-shot -w | -s | -f" >&2
+	exit 2
+	;;
+esac
+
+ksnip "$mode" --saveto "$file" >/dev/null 2>&1
+# no file: the region pick was cancelled (Escape), or ksnip failed
+[ -s "$file" ] || exit 0
+
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+	wl-copy --type image/png <"$file"
+else
+	xclip -selection clipboard -target image/png <"$file"
+fi
+notify-send -a flexiflow-shot -i "$file" "Screenshot saved" "$file"

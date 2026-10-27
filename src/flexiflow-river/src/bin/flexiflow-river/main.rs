@@ -11,7 +11,7 @@
 //!   `flexiflow-river -c view '{"Ui":4}'`
 //!
 //! `flexiflow-river --focused` prints the focused window's identifier
-//! and geometry, for `grim` (see `flexiflow-shot`).
+//! and geometry, e.g. for `grim -T`/`grim -g`.
 //!
 //! `flexiflow-river --session` starts the whole session: river, running
 //! this as its window manager (see [`session`]).

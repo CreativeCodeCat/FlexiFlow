@@ -34,7 +34,7 @@ install: all
 	mkdir -p ${DESTDIR}${SHAREPREFIX}/wayland-sessions
 	install -m 755 ${BIN} ${DESTDIR}${PREFIX}/bin/FlexiFlow
 	install -m 755 ${BAR} ${DESTDIR}${PREFIX}/bin/flexiflow_bar
-	install -m 755 ${RIVER} src/flexiflow-river/flexiflow-shot ${DESTDIR}${PREFIX}/bin/
+	install -m 755 ${RIVER} src/flexiflow-common/flexiflow-shot ${DESTDIR}${PREFIX}/bin/
 	install -m 644 src/flexiflow-x11/FlexiFlow.desktop ${DESTDIR}${SHAREPREFIX}/xsessions/
 	install -m 644 src/flexiflow-river/flexiflow-river.desktop ${DESTDIR}${SHAREPREFIX}/wayland-sessions/
 	# river under the name FlexiFlow, so fetch tools name the WM that
